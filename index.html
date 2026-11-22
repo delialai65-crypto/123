@@ -1,0 +1,3540 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>淵默之邸 | SILENT ABYSS - 3D 手機恐怖遊戲首頁</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts: Noto Serif TC & Cinzel Decorative -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;800&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold-primary: #c5a059;
+            --gold-bright: #f3d58d;
+            --gold-dark: #5e4822;
+            --blood-crimson: #8a0303;
+            --blood-glow: #ff1e1e;
+            --bg-abyss: #050507;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-abyss);
+            font-family: 'Noto Serif TC', serif;
+            color: #e5e0d8;
+        }
+
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        .font-cinzel-dec {
+            font-family: 'Cinzel Decorative', serif;
+        }
+
+        /* 3D Canvas Container */
+        #webgl-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            touch-action: none;
+        }
+
+        /* Cinematic Vignette & Film Grain */
+        .vignette-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            background: radial-gradient(circle at 50% 45%, transparent 35%, rgba(2, 2, 4, 0.72) 80%, rgba(0, 0, 0, 0.96) 100%);
+            box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
+        }
+
+        .film-grain {
+            position: fixed;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            pointer-events: none;
+            z-index: 3;
+            opacity: 0.045;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            animation: grainShift 0.6s steps(4) infinite;
+        }
+
+        @keyframes grainShift {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-2%, 2%); }
+            50% { transform: translate(2%, -1%); }
+            75% { transform: translate(-1%, -2%); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* Luxury Dark Glassmorphism & Ornate Borders */
+        .luxury-glass {
+            background: linear-gradient(145deg, rgba(16, 15, 20, 0.78) 0%, rgba(8, 7, 10, 0.88) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(197, 160, 89, 0.32);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.85), inset 0 0 15px rgba(197, 160, 89, 0.08);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(180deg, #fff3d1 0%, #c5a059 55%, #755926 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.95));
+        }
+
+        /* Eerie Flickering Title Animation */
+        @keyframes titleFlicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                opacity: 1;
+                filter: drop-shadow(0 0 14px rgba(197, 160, 89, 0.45)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.95));
+            }
+            20%, 24%, 55% {
+                opacity: 0.72;
+                filter: drop-shadow(0 0 4px rgba(138, 3, 3, 0.8));
+            }
+        }
+
+        .title-flicker {
+            animation: titleFlicker 7s infinite;
+        }
+
+        /* Luxury Menu Button */
+        .horror-menu-btn {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(90deg, rgba(15, 14, 18, 0.82) 0%, rgba(28, 22, 24, 0.75) 50%, rgba(15, 14, 18, 0.82) 100%);
+            border: 1px solid rgba(197, 160, 89, 0.28);
+            transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .horror-menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(197, 160, 89, 0.22), rgba(138, 3, 3, 0.25), transparent);
+            transition: left 0.45s ease;
+        }
+
+        .horror-menu-btn:hover::before,
+        .horror-menu-btn:active::before {
+            left: 100%;
+        }
+
+        .horror-menu-btn:hover,
+        .horror-menu-btn:active {
+            border-color: rgba(243, 213, 141, 0.85);
+            transform: translateY(-2px) scale(1.015);
+            box-shadow: 0 0 22px rgba(138, 3, 3, 0.45), inset 0 0 12px rgba(197, 160, 89, 0.2);
+        }
+
+        .horror-menu-btn.primary-crimson {
+            background: linear-gradient(90deg, rgba(45, 7, 10, 0.88) 0%, rgba(88, 12, 16, 0.85) 50%, rgba(45, 7, 10, 0.88) 100%);
+            border: 1px solid rgba(212, 167, 89, 0.65);
+            box-shadow: 0 0 25px rgba(138, 3, 3, 0.4);
+        }
+
+        /* Corner Filigree Accents */
+        .corner-ornament {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: var(--gold-primary);
+            pointer-events: none;
+            opacity: 0.75;
+        }
+        .corner-tl { top: 3px; left: 3px; border-top: 1.5px solid; border-left: 1.5px solid; }
+        .corner-tr { top: 3px; right: 3px; border-top: 1.5px solid; border-right: 1.5px solid; }
+        .corner-bl { bottom: 3px; left: 3px; border-bottom: 1.5px solid; border-left: 1.5px solid; }
+        .corner-br { bottom: 3px; right: 3px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+
+        /* Pulse Ring on Intro Veil */
+        @keyframes pulseRing {
+            0% { transform: scale(0.92); opacity: 0.75; }
+            50% { transform: scale(1.08); opacity: 0.25; }
+            100% { transform: scale(0.92); opacity: 0.75; }
+        }
+        .pulse-ring {
+            animation: pulseRing 3.2s ease-in-out infinite;
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: rgba(197, 160, 89, 0.25);
+            border-radius: 999px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fff3d1, #c5a059);
+            border: 1px solid #3a280c;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.8);
+            cursor: pointer;
+        }
+
+        /* Custom Scrollbar for Modals */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 10, 12, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(197, 160, 89, 0.45);
+            border-radius: 4px;
+        }
+
+        /* Glitch Micro-effect on hover */
+        @keyframes microGlitch {
+            0% { transform: translate(0); }
+            25% { transform: translate(-2px, 1px); }
+            50% { transform: translate(2px, -1px); }
+            75% { transform: translate(-1px, -1px); }
+            100% { transform: translate(0); }
+        }
+        .glitch-trigger:hover .glitch-target {
+            animation: microGlitch 0.22s linear;
+        }
+
+        /* =========================================================
+           IN-GAME HUD, JOYSTICK & SANITY HORROR EFFECTS
+           ========================================================= */
+        #sanity-blood-vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+            background: radial-gradient(circle at center, transparent 42%, rgba(120, 4, 4, 0.55) 82%, rgba(45, 0, 0, 0.92) 100%);
+            transition: opacity 0.25s ease;
+        }
+
+        @keyframes panicPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .panic-active {
+            animation: panicPulse 0.65s infinite ease-in-out;
+        }
+
+        /* Virtual Joystick Styling */
+        #joystick-zone {
+            touch-action: none;
+        }
+        .joystick-base {
+            background: radial-gradient(circle, rgba(20, 18, 24, 0.55) 0%, rgba(10, 9, 12, 0.82) 100%);
+            border: 1.5px solid rgba(197, 160, 89, 0.35);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 12px rgba(197, 160, 89, 0.12);
+        }
+        .joystick-knob {
+            background: radial-gradient(circle at 35% 35%, #f3d58d, #8c6a2b 70%, #3d2c0e 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.9), 0 0 10px rgba(197, 160, 89, 0.5);
+        }
+
+        /* Action Buttons */
+        .game-action-btn {
+            background: linear-gradient(145deg, rgba(24, 21, 28, 0.85), rgba(10, 9, 13, 0.92));
+            border: 1px solid rgba(197, 160, 89, 0.4);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
+            touch-action: none;
+            transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .game-action-btn:active, .game-action-btn.btn-active {
+            transform: scale(0.92);
+            border-color: #f3d58d;
+            box-shadow: 0 0 18px rgba(197, 160, 89, 0.45);
+        }
+        .game-action-btn.interact-ready {
+            border-color: #ff4d4d;
+            background: linear-gradient(145deg, rgba(95, 12, 16, 0.92), rgba(35, 6, 8, 0.95));
+            box-shadow: 0 0 24px rgba(255, 42, 42, 0.65);
+            animation: pulseRing 1.4s infinite;
+        }
+
+        /* Chromatic Aberration & Low Sanity Distortion */
+        @keyframes sanityGlitchJitter {
+            0%, 100% { transform: translate(0, 0) skew(0deg); filter: hue-rotate(0deg); }
+            20% { transform: translate(-2px, 1px) skew(-0.6deg); filter: hue-rotate(15deg) contrast(1.15); }
+            40% { transform: translate(2px, -1px) skew(0.6deg); filter: hue-rotate(-15deg); }
+            60% { transform: translate(-1px, -2px); }
+            80% { transform: translate(1px, 2px); }
+        }
+        .low-sanity-shake {
+            animation: sanityGlitchJitter 0.35s infinite;
+        }
+
+        /* ECG Heartbeat Line Animation */
+        @keyframes ecgDash {
+            to { stroke-dashoffset: -120; }
+        }
+        .ecg-path {
+            stroke-dasharray: 120;
+            animation: ecgDash 1.8s linear infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D WebGL Main Background & Gameplay Scene -->
+    <div id="webgl-container"></div>
+
+    <!-- Atmospheric Vignette & Grain Overlays -->
+    <div class="vignette-overlay"></div>
+    <div class="film-grain"></div>
+    <!-- Dynamic Sanity / Ghost Proximity Blood Vignette -->
+    <div id="sanity-blood-vignette"></div>
+
+    <!-- Intro "Tap to Awaken" Veil (Enables Web Audio API & Fullscreen feel) -->
+    <div id="intro-veil" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#040406]/95 backdrop-blur-md transition-opacity duration-1000 px-6 text-center cursor-pointer">
+        <div class="relative flex items-center justify-center w-36 h-36 mb-8">
+            <div class="absolute inset-0 rounded-full border border-[#c5a059]/40 pulse-ring"></div>
+            <div class="absolute inset-3 rounded-full border border-[#8a0303]/60"></div>
+            <!-- Gothic Eye / Keyhole SVG Emblem -->
+            <svg class="w-16 h-16 text-[#c5a059] drop-shadow-[0_0_15px_rgba(197,160,89,0.6)]" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M32 10C18 10 6 32 6 32C6 32 18 54 32 54C46 54 58 32 58 32C58 32 46 10 32 10Z" />
+                <circle cx="32" cy="32" r="10" stroke="#a61c1c" stroke-width="2" />
+                <path d="M32 25V39M28 32H36" stroke="#f3d58d" stroke-width="1.5" />
+                <path d="M32 4V10M32 54V60M4 32H10M54 32H60" stroke-opacity="0.5" />
+            </svg>
+        </div>
+
+        <p class="font-cinzel text-xs tracking-[0.35em] text-[#c5a059]/80 uppercase mb-2">HEADPHONES RECOMMENDED</p>
+        <h2 class="text-xl sm:text-2xl font-bold tracking-[0.2em] text-[#f3d58d] mb-3">建議配戴耳機以獲得極致恐懼體驗</h2>
+        <p class="text-xs sm:text-sm text-stone-400 max-w-xs leading-relaxed mb-10">
+            本遊戲包含高強度心理驚悚、突發聲響與暗黑哥德宗教意象。
+        </p>
+
+        <div class="px-8 py-3.5 rounded-full border border-[#c5a059]/60 bg-[#141114]/80 shadow-[0_0_30px_rgba(197,160,89,0.25)] flex items-center gap-3 animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-[#ff2a2a] shadow-[0_0_8px_#ff2a2a]"></span>
+            <span class="text-sm font-semibold tracking-[0.25em] text-[#f3d58d]">輕觸螢幕喚醒夢魘</span>
+        </div>
+        <span class="font-cinzel text-[10px] tracking-[0.3em] text-stone-500 mt-3 uppercase">TAP ANYWHERE TO AWAKEN</span>
+    </div>
+
+    <!-- Main Mobile AAA HUD Layer -->
+    <main id="main-hud" class="relative z-10 w-full h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 pointer-events-none opacity-0 transition-opacity duration-1000">
+        
+        <!-- TOP STATUS BAR (Mobile AAA Profile, Currency, FPS/Battery, Audio) -->
+        <header class="w-full max-w-6xl mx-auto flex items-start justify-between gap-2 pointer-events-auto">
+            <!-- Left: Player Emblem & Soul Shards -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                <!-- Player Profile Pill -->
+                <div onclick="openToast('調查員檔案：Lv.42 守夜人 · 精神理智值 68%')" class="luxury-glass rounded-xl px-3 py-2 flex items-center gap-2.5 cursor-pointer active:scale-95 transition-transform">
+                    <div class="relative w-9 h-9 rounded-lg border border-[#c5a059]/70 bg-gradient-to-b from-[#2b1518] to-[#0d0b0e] flex items-center justify-center overflow-hidden">
+                        <i class="fa-solid fa-crow text-[#f3d58d] text-sm"></i>
+                        <span class="absolute bottom-0 right-0 bg-[#8a0303] text-[9px] font-bold px-1 rounded-tl text-white">42</span>
+                    </div>
+                    <div class="leading-tight">
+                        <div class="text-xs font-bold text-[#f3d58d] tracking-wider flex items-center gap-1.5">
+                            <span>守夜人·亞瑟</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        </div>
+                        <div id="menu-sanity-display" class="text-[10px] text-stone-400 font-cinzel tracking-wider">SANITY: 100%</div>
+                    </div>
+                </div>
+
+                <!-- Soul Shards / Cursed Currency -->
+                <div onclick="openToast('魂晶餘額：通關各章節與收集手札可獲得大量魂晶')" class="luxury-glass rounded-xl px-3 py-1.5 flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+                    <i class="fa-solid fa-gem text-xs text-[#ff4d4d] drop-shadow-[0_0_6px_rgba(255,77,77,0.8)]"></i>
+                    <span id="menu-shards-display" class="text-xs font-bold tracking-wider text-stone-200">1,480</span>
+                    <span class="text-[10px] text-[#c5a059] border-l border-stone-700 pl-1.5">魂晶</span>
+                </div>
+            </div>
+
+            <!-- Right: Mobile Telemetry (FPS / Battery) & Sound Toggle -->
+            <div class="flex items-center gap-2">
+                <!-- Mobile Hardware Status Pill -->
+                <div class="hidden xs:flex luxury-glass rounded-xl px-3 py-2 items-center gap-3 text-[11px] font-cinzel text-stone-300">
+                    <span id="fps-counter" class="text-[#c5a059] font-semibold">60 FPS</span>
+                    <span class="text-stone-600">|</span>
+                    <span class="flex items-center gap-1 text-emerald-400">
+                        <i class="fa-solid fa-battery-three-quarters"></i>
+                        <span id="battery-level">84%</span>
+                    </span>
+                </div>
+
+                <!-- Audio Mute / Unmute Button -->
+                <button id="audio-toggle-btn" aria-label="切換音效" class="luxury-glass w-10 h-10 rounded-xl flex items-center justify-center text-[#c5a059] hover:text-[#fff3d1] active:scale-90 transition-all cursor-pointer">
+                    <i id="audio-icon" class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+
+                <!-- Quick Notice / Mail Icon -->
+                <button onclick="openModal('notice-modal')" aria-label="系統公告" class="relative luxury-glass w-10 h-10 rounded-xl flex items-center justify-center text-[#c5a059] hover:text-[#fff3d1] active:scale-90 transition-all cursor-pointer">
+                    <i class="fa-solid fa-scroll text-sm"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#ff2a2a] animate-ping"></span>
+                    <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#ff2a2a]"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- CENTER / UPPER-MID GAME TITLE EMBLEM -->
+        <section class="w-full max-w-4xl mx-auto flex flex-col items-center text-center my-auto pt-2 pb-4 select-none">
+            <!-- Ornate Top Divider -->
+            <div class="flex items-center gap-3 mb-2 opacity-85">
+                <div class="h-[1px] w-12 sm:w-20 bg-gradient-to-r from-transparent to-[#c5a059]"></div>
+                <span class="font-cinzel text-[10px] sm:text-xs tracking-[0.4em] text-[#c5a059] uppercase">CHAPTER IV · THE VEILED CATHEDRAL</span>
+                <div class="h-[1px] w-12 sm:w-20 bg-gradient-to-l from-transparent to-[#c5a059]"></div>
+            </div>
+
+            <!-- Main Luxury Chinese Title -->
+            <h1 class="title-flicker text-5xl sm:text-6xl md:text-7xl font-black tracking-[0.22em] gold-gradient-text pl-[0.22em] leading-tight">
+                淵默之邸
+            </h1>
+
+            <!-- Gothic English Subtitle -->
+            <div class="mt-1 sm:mt-2 flex items-center gap-3">
+                <span class="text-[#8a0303] text-xs">✦</span>
+                <p class="font-cinzel-dec text-sm sm:text-lg md:text-xl tracking-[0.45em] text-stone-300/90 pl-[0.45em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                    SILENT ABYSS
+                </p>
+                <span class="text-[#8a0303] text-xs">✦</span>
+            </div>
+
+            <!-- Interactive Camera Drag Hint -->
+            <div class="mt-4 px-3 py-1 rounded-full bg-black/40 border border-white/5 text-[10px] text-stone-400 tracking-widest flex items-center gap-2 backdrop-blur-sm">
+                <i class="fa-solid fa-hand-pointer text-[#c5a059]/80 text-[10px]"></i>
+                <span>拖曳畫面環顧祭壇 · 點擊燭火可驚擾幽影</span>
+            </div>
+        </section>
+
+        <!-- BOTTOM LUXURY MENU & FOOTER (Mobile Thumb-Zone Optimized) -->
+        <footer class="w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center md:items-end justify-between gap-4 pointer-events-auto">
+            
+            <!-- Left Desktop/Tablet Atmospheric Quote (Hidden on tiny screens to keep clean) -->
+            <div class="hidden md:flex flex-col max-w-xs luxury-glass rounded-2xl p-4 relative">
+                <div class="corner-ornament corner-tl"></div>
+                <div class="corner-ornament corner-br"></div>
+                <div class="flex items-center gap-2 text-[#c5a059] text-xs font-semibold tracking-widest mb-1.5">
+                    <i class="fa-solid fa-candle-holder"></i>
+                    <span>今日怪談殘頁 · 04</span>
+                </div>
+                <p class="text-xs text-stone-300/90 leading-relaxed italic">
+                    「當第十二聲鐘響沉入地底，切勿回頭看身後的燭影——因為那不是你的影子。」
+                </p>
+                <span class="font-cinzel text-[10px] text-stone-500 mt-2 tracking-widest">VER 2.4.0 · UNREAL MOBILE RENDER</span>
+            </div>
+
+            <!-- Primary Interactive Menu Stack (Thumb-Friendly Vertical Stack on Mobile) -->
+            <nav class="w-full max-w-sm sm:max-w-md md:w-96 flex flex-col gap-2.5">
+                
+                <!-- 1. NEW GAME (開始噩夢) -->
+                <button onclick="startNewGameSequence()" class="horror-menu-btn primary-crimson glitch-trigger w-full rounded-xl py-3.5 px-5 flex items-center justify-between cursor-pointer group">
+                    <div class="corner-ornament corner-tl"></div>
+                    <div class="corner-ornament corner-tr"></div>
+                    <div class="corner-ornament corner-bl"></div>
+                    <div class="corner-ornament corner-br"></div>
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-8 h-8 rounded-lg bg-[#8a0303]/50 border border-[#f3d58d]/50 flex items-center justify-center text-[#fff3d1] group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-skull text-sm"></i>
+                        </div>
+                        <div class="text-left glitch-target">
+                            <div class="text-base sm:text-lg font-bold tracking-[0.2em] text-[#fff3d1]">開始噩夢</div>
+                            <div class="font-cinzel text-[10px] tracking-[0.25em] text-[#f3d58d]/75">NEW GAME · PROLOGUE</div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-[#f3d58d] group-hover:translate-x-1 transition-transform"></i>
+                </button>
+
+                <!-- 2. CONTINUE (繼續探索) -->
+                <button onclick="continueLastSave()" class="horror-menu-btn glitch-trigger w-full rounded-xl py-3 px-5 flex items-center justify-between cursor-pointer group">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-8 h-8 rounded-lg bg-black/50 border border-[#c5a059]/35 flex items-center justify-center text-[#c5a059]">
+                            <i class="fa-solid fa-door-open text-sm"></i>
+                        </div>
+                        <div class="text-left glitch-target">
+                            <div class="text-sm sm:text-base font-bold tracking-[0.18em] text-stone-100">繼續探索</div>
+                            <div id="menu-continue-sub" class="font-cinzel text-[10px] tracking-[0.2em] text-stone-400">CONTINUE · 第一章 泣血聖堂</div>
+                        </div>
+                    </div>
+                    <span id="menu-progress-badge" class="text-[10px] px-2 py-0.5 rounded bg-[#c5a059]/15 border border-[#c5a059]/30 text-[#c5a059]">進度 0/3</span>
+                </button>
+
+                <!-- 3 & 4 Grid: CHAPTERS & ARTIFACTS -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <!-- CHAPTERS (章節選擇) -->
+                    <button onclick="openModal('chapters-modal')" class="horror-menu-btn glitch-trigger rounded-xl py-3 px-3.5 flex items-center gap-2.5 cursor-pointer group">
+                        <div class="w-8 h-8 rounded-lg bg-black/50 border border-[#c5a059]/35 flex items-center justify-center text-[#c5a059] shrink-0">
+                            <i class="fa-solid fa-book-skull text-sm"></i>
+                        </div>
+                        <div class="text-left overflow-hidden glitch-target">
+                            <div class="text-xs sm:text-sm font-bold tracking-[0.12em] text-stone-100 truncate">章節選擇</div>
+                            <div class="font-cinzel text-[9px] tracking-[0.18em] text-stone-400 truncate">CHAPTERS</div>
+                        </div>
+                    </button>
+
+                    <!-- ARTIFACTS (藏品與圖鑑) -->
+                    <button onclick="openArtifactsModal()" class="horror-menu-btn glitch-trigger rounded-xl py-3 px-3.5 flex items-center gap-2.5 cursor-pointer group">
+                        <div class="w-8 h-8 rounded-lg bg-black/50 border border-[#c5a059]/35 flex items-center justify-center text-[#c5a059] shrink-0">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </div>
+                        <div class="text-left overflow-hidden glitch-target">
+                            <div class="text-xs sm:text-sm font-bold tracking-[0.12em] text-stone-100 truncate">藏品與圖鑑</div>
+                            <div class="font-cinzel text-[9px] tracking-[0.18em] text-stone-400 truncate">ARTIFACTS</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- 5. SETTINGS (系統設定) -->
+                <button onclick="openModal('settings-modal')" class="horror-menu-btn glitch-trigger w-full rounded-xl py-2.5 px-5 flex items-center justify-between cursor-pointer group">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-sliders text-xs text-[#c5a059] ml-2"></i>
+                        <div class="flex items-baseline gap-2 glitch-target">
+                            <span class="text-xs sm:text-sm font-bold tracking-[0.18em] text-stone-200">系統設定</span>
+                            <span class="font-cinzel text-[10px] tracking-[0.2em] text-stone-500">SETTINGS</span>
+                        </div>
+                    </div>
+                    <span id="current-quality-badge" class="text-[10px] text-[#c5a059]/90 font-cinzel tracking-wider">ULTRA 60FPS</span>
+                </button>
+            </nav>
+
+        </footer>
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 1: CHAPTERS SELECTION (章節選擇)                                 -->
+    <!-- ===================================================================== -->
+    <div id="chapters-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="luxury-glass relative w-full max-w-2xl rounded-2xl p-5 sm:p-6 max-h-[88vh] flex flex-col">
+            <div class="corner-ornament corner-tl"></div>
+            <div class="corner-ornament corner-tr"></div>
+            <div class="corner-ornament corner-bl"></div>
+            <div class="corner-ornament corner-br"></div>
+
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-[#c5a059]/25 pb-3.5 mb-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-bold tracking-[0.2em] text-[#f3d58d]">章節選擇</h3>
+                    <p class="font-cinzel text-[10px] tracking-[0.3em] text-stone-400">SELECT NIGHTMARE CHAPTER</p>
+                </div>
+                <button onclick="closeModal('chapters-modal')" class="w-9 h-9 rounded-lg border border-stone-700 hover:border-[#c5a059] flex items-center justify-center text-stone-300 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Chapter Cards List -->
+            <div id="chapters-list-container" class="overflow-y-auto space-y-3 pr-1">
+                <!-- Dynamically Rendered via renderChapterCards() -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- IN-GAME FIRST-PERSON SURVIVAL HUD (遊戲內遊玩介面)                     -->
+    <!-- ===================================================================== -->
+    <div id="gameplay-hud" class="fixed inset-0 z-20 hidden flex-col justify-between p-3 sm:p-5 pointer-events-none select-none">
+        
+        <!-- TOP HUD BAR: Sanity/Stamina/ECG | Objective & Radar Compass | Battery & Pause -->
+        <div class="w-full max-w-6xl mx-auto flex items-start justify-between gap-2">
+            
+            <!-- Top-Left: Sanity ECG, Stamina & Flashlight Battery -->
+            <div class="luxury-glass rounded-xl p-2.5 sm:p-3 w-40 sm:w-52 pointer-events-auto">
+                <!-- Sanity Bar + Live ECG -->
+                <div class="mb-2">
+                    <div class="flex justify-between items-center text-[10px] sm:text-xs mb-1">
+                        <span class="text-[#f3d58d] font-bold tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-brain text-[#ff4d4d]"></i>理智
+                        </span>
+                        <svg class="w-12 h-3 overflow-visible" viewBox="0 0 60 16">
+                            <polyline id="ecg-polyline" class="ecg-path" fill="none" stroke="#ff3b3b" stroke-width="1.6" points="0,8 12,8 16,2 20,15 24,5 28,8 42,8 46,3 50,14 54,8 60,8"/>
+                        </svg>
+                        <span id="hud-sanity-text" class="font-cinzel text-stone-200 font-semibold">100%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-black/80 rounded-full overflow-hidden border border-white/10">
+                        <div id="hud-sanity-bar" class="h-full bg-gradient-to-r from-[#8a0303] via-[#d93838] to-[#f3d58d] transition-all duration-150" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <!-- Stamina Bar -->
+                <div class="mb-2">
+                    <div class="flex justify-between items-center text-[10px] sm:text-xs mb-1">
+                        <span class="text-stone-300 font-bold tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-person-running text-[#c5a059]"></i>體力
+                        </span>
+                        <span id="hud-stamina-text" class="font-cinzel text-stone-400">100%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-black/80 rounded-full overflow-hidden border border-white/10">
+                        <div id="hud-stamina-bar" class="h-full bg-gradient-to-r from-[#5e4822] to-[#f3d58d] transition-all duration-100" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <!-- Flashlight Battery Bar -->
+                <div>
+                    <div class="flex justify-between items-center text-[10px] sm:text-xs mb-1">
+                        <span class="text-stone-300 font-bold tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-bolt text-[#f3d58d]"></i>手電筒
+                        </span>
+                        <span id="hud-battery-text" class="font-cinzel text-stone-200">100%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-black/80 rounded-full overflow-hidden border border-white/10">
+                        <div id="hud-battery-bar" class="h-full bg-[#f3d58d] transition-all duration-150" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top-Center: Objective, Objective Radar Compass & Ghost Warning -->
+            <div class="flex flex-col items-center max-w-[46%] sm:max-w-md text-center">
+                <div class="luxury-glass rounded-xl px-3 py-2 border border-[#c5a059]/45 shadow-lg flex items-center gap-2.5">
+                    <!-- Mini Objective Direction Radar Compass -->
+                    <div class="relative w-8 h-8 rounded-full border border-[#c5a059]/60 bg-black/80 flex items-center justify-center shrink-0">
+                        <div class="w-1 h-1 rounded-full bg-stone-500"></div>
+                        <div id="compass-needle" class="absolute inset-0 flex items-start justify-center transition-transform duration-100">
+                            <div class="w-1.5 h-2.5 bg-[#ff4d4d] rounded-full mt-0.5 shadow-[0_0_6px_#ff4d4d]"></div>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <div id="hud-chapter-badge" class="font-cinzel text-[9px] tracking-[0.22em] text-[#c5a059] uppercase">CH.01 · 泣血聖堂</div>
+                        <div id="hud-objective-text" class="text-[11px] sm:text-xs font-bold text-[#fff3d1] tracking-wider mt-0.5 leading-snug">
+                            收集古銅鑰匙並解除三座聖像封印 (0/3)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ghost Warning Indicator -->
+                <div id="ghost-warning-pill" class="mt-1.5 px-3 py-0.5 rounded-full bg-[#8a0303]/90 border border-[#ff4d4d] text-[10px] font-bold text-white tracking-widest opacity-0 transition-opacity duration-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-eye animate-pulse"></i>
+                    <span id="ghost-status-label">怨靈正在附近遊蕩...</span>
+                </div>
+            </div>
+
+            <!-- Top-Right: Quick Inventory Slots (Battery / Sedative), Audio & Pause -->
+            <div class="flex flex-col items-end gap-1.5 pointer-events-auto">
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleInGameAudio()" aria-label="切換音效" class="luxury-glass w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-[#c5a059] active:scale-90 cursor-pointer">
+                        <i id="ingame-audio-icon" class="fa-solid fa-volume-high text-xs"></i>
+                    </button>
+                    <button onclick="pauseGame()" aria-label="暫停遊戲" class="luxury-glass w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-[#f3d58d] active:scale-90 cursor-pointer">
+                        <i class="fa-solid fa-pause text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Usable Backpack Items -->
+                <div class="flex items-center gap-1.5">
+                    <!-- Spare Battery Slot -->
+                    <button onclick="useInventoryItem('BATTERY')" class="luxury-glass rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 border border-emerald-500/40 active:scale-90 cursor-pointer" title="使用備用電池 (+55% 電量)">
+                        <i class="fa-solid fa-battery-three-quarters text-xs text-emerald-400"></i>
+                        <span id="inv-battery-count" class="font-cinzel text-xs font-bold text-white">1</span>
+                    </button>
+                    <!-- Sedative Vial Slot -->
+                    <button onclick="useInventoryItem('SEDATIVE')" class="luxury-glass rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 border border-sky-400/40 active:scale-90 cursor-pointer" title="注射鎮靜安神劑 (+45% 理智)">
+                        <i class="fa-solid fa-syringe text-xs text-sky-300"></i>
+                        <span id="inv-sedative-count" class="font-cinzel text-xs font-bold text-white">1</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER RETICLE & INTERACTION PROMPT -->
+        <div class="relative flex flex-col items-center justify-center my-auto pointer-events-none">
+            <div id="center-reticle" class="w-1.5 h-1.5 rounded-full bg-[#f3d58d]/70 shadow-[0_0_6px_#f3d58d] transition-transform duration-150"></div>
+            <div id="interact-hint-badge" class="mt-3 px-3.5 py-1 rounded-full bg-black/80 border border-[#c5a059]/70 text-xs font-bold text-[#fff3d1] tracking-wider opacity-0 transition-opacity duration-200">
+                點擊右側「互動」
+            </div>
+        </div>
+
+        <!-- BOTTOM TOUCH CONTROLS: Left Dynamic Joystick + Crouch/Hold Breath | Right Action Cluster -->
+        <div class="w-full max-w-6xl mx-auto flex items-end justify-between pb-1 sm:pb-2">
+            
+            <!-- Left: Dynamic Virtual Joystick Zone + Stealth Hold Breath Button -->
+            <div class="flex items-end gap-2.5 pointer-events-auto">
+                <div id="joystick-zone" class="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center">
+                    <div id="joystick-base" class="joystick-base w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center relative">
+                        <div class="absolute inset-3 rounded-full border border-white/5 pointer-events-none"></div>
+                        <div id="joystick-knob" class="joystick-knob w-11 h-11 sm:w-12 sm:h-12 rounded-full absolute transition-transform duration-75"></div>
+                    </div>
+                </div>
+
+                <!-- Crouch / Hold Breath Stealth Toggle -->
+                <button id="btn-stealth" onclick="toggleStealthMode()" class="game-action-btn w-14 h-14 sm:w-15 sm:h-15 rounded-2xl flex flex-col items-center justify-center gap-1 text-stone-300 cursor-pointer mb-2">
+                    <i id="stealth-icon" class="fa-solid fa-lungs text-sm text-[#c5a059]"></i>
+                    <span id="stealth-label" class="text-[10px] font-bold tracking-wider">屏息</span>
+                </button>
+            </div>
+
+            <!-- Center-Bottom Desktop Keyboard Legend -->
+            <div class="hidden lg:flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/55 border border-white/10 text-[11px] text-stone-400">
+                <span><strong class="text-[#c5a059]">WASD</strong> 移動</span>
+                <span>•</span>
+                <span><strong class="text-[#c5a059]">拖曳</strong> 視角</span>
+                <span>•</span>
+                <span><strong class="text-[#c5a059]">F</strong> 手電筒</span>
+                <span>•</span>
+                <span><strong class="text-[#c5a059]">Q</strong> 強光致盲</span>
+                <span>•</span>
+                <span><strong class="text-[#c5a059]">C</strong> 屏息</span>
+                <span>•</span>
+                <span><strong class="text-[#c5a059]">E</strong> 互動</span>
+                <span>•</span>
+                <span><strong class="text-[#c5a059]">1/2</strong> 道具</span>
+            </div>
+
+            <!-- Right: Mobile Thumb-Zone Action Buttons -->
+            <div class="flex flex-col items-end gap-2.5 pointer-events-auto">
+                <div class="flex items-center gap-2.5">
+                    <!-- Focus Flash Blind Skill Button (Cooldown + Battery Cost) -->
+                    <button id="btn-focus-flash" onclick="triggerFocusFlash()" class="game-action-btn relative w-14 h-14 sm:w-15 sm:h-15 rounded-2xl flex flex-col items-center justify-center gap-1 text-[#fff3d1] cursor-pointer overflow-hidden">
+                        <i class="fa-solid fa-sun text-base text-amber-300"></i>
+                        <span id="focus-flash-label" class="text-[10px] font-bold tracking-wider">強光</span>
+                    </button>
+
+                    <!-- Dynamic Context Interact Button -->
+                    <button id="btn-interact" onclick="triggerPlayerInteract()" class="game-action-btn w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex flex-col items-center justify-center gap-1 text-stone-300 cursor-pointer">
+                        <i id="interact-btn-icon" class="fa-solid fa-hand text-lg text-[#c5a059]"></i>
+                        <span id="interact-btn-label" class="text-[10px] font-bold tracking-wider">互動</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                    <!-- Flashlight Toggle Button -->
+                    <button id="btn-flashlight" onclick="toggleFlashlight()" class="game-action-btn btn-active w-14 h-14 sm:w-15 sm:h-15 rounded-2xl flex flex-col items-center justify-center gap-1 text-[#fff3d1] cursor-pointer">
+                        <i class="fa-solid fa-lightbulb text-base text-[#f3d58d]"></i>
+                        <span class="text-[10px] font-bold tracking-wider">手電筒</span>
+                    </button>
+
+                    <!-- Sprint Button (Hold) -->
+                    <button id="btn-sprint" class="game-action-btn w-16 h-16 sm:w-18 sm:h-18 rounded-full flex flex-col items-center justify-center gap-1 text-stone-200 cursor-pointer">
+                        <i class="fa-solid fa-person-running text-lg text-[#f3d58d]"></i>
+                        <span class="text-[10px] font-bold tracking-wider">衝刺</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: LORE NOTE READER (拾取古堡日記殘頁彈窗)                           -->
+    <!-- ===================================================================== -->
+    <div id="note-reader-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+        <div class="luxury-glass relative w-full max-w-md rounded-2xl p-6 text-left">
+            <div class="corner-ornament corner-tl"></div>
+            <div class="corner-ornament corner-tr"></div>
+            <div class="corner-ornament corner-bl"></div>
+            <div class="corner-ornament corner-br"></div>
+
+            <div class="flex items-center justify-between border-b border-[#c5a059]/30 pb-3 mb-4">
+                <div>
+                    <span class="font-cinzel text-[10px] tracking-[0.3em] text-[#c5a059]">MANOR ARCHIVE · 殘頁線索</span>
+                    <h3 id="note-title" class="text-lg font-bold text-[#f3d58d] tracking-wider mt-0.5">染血的守夜人筆記</h3>
+                </div>
+                <i class="fa-solid fa-feather-pointed text-[#c5a059]"></i>
+            </div>
+
+            <p id="note-body" class="text-xs sm:text-sm text-stone-200 leading-loose whitespace-pre-line font-serif bg-black/40 p-4 rounded-xl border border-white/5 mb-5">
+                「不要直視無面修女的紅瞳……當走廊的燭火開始劇烈搖晃，立刻關掉手電筒貼牆屏息，或用強光直射她的臉龐爭取逃跑時間。」
+            </p>
+
+            <button onclick="closeNoteModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-[#5e4822] via-[#c5a059] to-[#5e4822] text-black font-bold text-sm tracking-[0.2em] cursor-pointer active:scale-95 transition-transform">
+                收起殘頁並繼續探索
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: IN-GAME PAUSE MENU (遊戲暫停選單)                                -->
+    <!-- ===================================================================== -->
+    <div id="pause-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+        <div class="luxury-glass relative w-full max-w-sm rounded-2xl p-6 text-center">
+            <div class="corner-ornament corner-tl"></div>
+            <div class="corner-ornament corner-br"></div>
+
+            <p class="font-cinzel text-[10px] tracking-[0.35em] text-[#c5a059] mb-1">NIGHTMARE PAUSED</p>
+            <h3 class="text-xl font-bold tracking-[0.25em] text-[#f3d58d] mb-6">夢魘暫停</h3>
+
+            <div class="space-y-3">
+                <button onclick="resumeGame()" class="horror-menu-btn primary-crimson w-full py-3 rounded-xl text-sm font-bold tracking-[0.2em] text-[#fff3d1] cursor-pointer">
+                    繼續探索
+                </button>
+                <button onclick="restartGameplay()" class="horror-menu-btn w-full py-3 rounded-xl text-sm font-bold tracking-[0.2em] text-stone-200 cursor-pointer">
+                    重新開始本關
+                </button>
+                <button onclick="openModal('settings-modal')" class="horror-menu-btn w-full py-3 rounded-xl text-sm font-bold tracking-[0.2em] text-stone-200 cursor-pointer">
+                    系統與畫質設定
+                </button>
+                <button onclick="returnToMainMenu()" class="horror-menu-btn w-full py-3 rounded-xl text-sm font-bold tracking-[0.2em] text-stone-400 cursor-pointer">
+                    返回豪華主選單
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: GAME OVER / ESCAPED ENDING SCREEN (結局結算畫面)                 -->
+    <!-- ===================================================================== -->
+    <div id="ending-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/92 backdrop-blur-lg p-4">
+        <div class="luxury-glass relative w-full max-w-md rounded-2xl p-6 sm:p-8 text-center">
+            <div class="corner-ornament corner-tl"></div>
+            <div class="corner-ornament corner-tr"></div>
+            <div class="corner-ornament corner-bl"></div>
+            <div class="corner-ornament corner-br"></div>
+
+            <div id="ending-icon-wrap" class="w-16 h-16 mx-auto mb-4 rounded-full border border-[#c5a059]/60 bg-[#241214] flex items-center justify-center">
+                <i id="ending-icon" class="fa-solid fa-crown text-2xl text-[#f3d58d]"></i>
+            </div>
+
+            <p id="ending-sub" class="font-cinzel text-xs tracking-[0.35em] text-[#c5a059] uppercase mb-1">ESCAPED THE ABYSS</p>
+            <h2 id="ending-title" class="text-2xl sm:text-3xl font-black tracking-[0.22em] gold-gradient-text mb-3">逃出生天</h2>
+            <p id="ending-desc" class="text-xs sm:text-sm text-stone-300 leading-relaxed mb-6">
+                三把染血古銅鑰匙轉動了封印大門，你伴隨著黎明微光衝出了淵默之邸的詛咒迴廊。
+            </p>
+
+            <!-- Run Statistics -->
+            <div class="grid grid-cols-4 gap-2 bg-black/50 rounded-xl p-3 border border-[#c5a059]/25 mb-6">
+                <div>
+                    <div class="text-[10px] text-stone-400">存活耗時</div>
+                    <div id="stat-time" class="font-cinzel text-xs sm:text-sm font-bold text-[#f3d58d] mt-0.5">01:42</div>
+                </div>
+                <div class="border-l border-stone-800">
+                    <div class="text-[10px] text-stone-400">剩餘理智</div>
+                    <div id="stat-sanity" class="font-cinzel text-xs sm:text-sm font-bold text-[#f3d58d] mt-0.5">74%</div>
+                </div>
+                <div class="border-l border-stone-800">
+                    <div class="text-[10px] text-stone-400">收集殘頁</div>
+                    <div id="stat-notes" class="font-cinzel text-xs sm:text-sm font-bold text-[#f3d58d] mt-0.5">2 / 3</div>
+                </div>
+                <div class="border-l border-stone-800">
+                    <div class="text-[10px] text-stone-400">獲得魂晶</div>
+                    <div id="stat-shards" class="font-cinzel text-xs sm:text-sm font-bold text-emerald-400 mt-0.5">+500</div>
+                </div>
+            </div>
+
+            <div class="space-y-2.5">
+                <button id="btn-next-chapter" onclick="proceedToNextChapter()" class="horror-menu-btn primary-crimson w-full py-3.5 rounded-xl text-sm font-bold tracking-[0.2em] text-[#fff3d1] cursor-pointer">
+                    前往下一章節
+                </button>
+                <button onclick="restartGameplay()" class="horror-menu-btn w-full py-3 rounded-xl text-sm font-bold tracking-[0.2em] text-stone-200 cursor-pointer">
+                    重新挑戰本關
+                </button>
+                <button onclick="returnToMainMenu()" class="horror-menu-btn w-full py-3 rounded-xl text-sm font-bold tracking-[0.2em] text-stone-400 cursor-pointer">
+                    返回豪華主選單
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 2: 3D ARTIFACTS VIEWER (藏品與圖鑑 - 互動式 3D 詛咒古物檢視器)     -->
+    <!-- ===================================================================== -->
+    <div id="artifacts-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+        <div class="luxury-glass relative w-full max-w-2xl rounded-2xl p-5 sm:p-6 max-h-[90vh] flex flex-col">
+            <div class="corner-ornament corner-tl"></div>
+            <div class="corner-ornament corner-tr"></div>
+            <div class="corner-ornament corner-bl"></div>
+            <div class="corner-ornament corner-br"></div>
+
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-[#c5a059]/25 pb-3 mb-3">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-bold tracking-[0.2em] text-[#f3d58d]">詛咒藏品與圖鑑</h3>
+                    <p class="font-cinzel text-[10px] tracking-[0.3em] text-stone-400">CURSED ARTIFACTS · 3D INSPECTION</p>
+                </div>
+                <button onclick="closeModal('artifacts-modal')" class="w-9 h-9 rounded-lg border border-stone-700 hover:border-[#c5a059] flex items-center justify-center text-stone-300 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Interactive 3D Relic Viewport -->
+            <div class="relative w-full h-52 sm:h-60 rounded-xl border border-[#c5a059]/35 bg-gradient-to-b from-[#09080c] via-[#140d10] to-[#070609] overflow-hidden mb-3">
+                <div id="artifact-3d-canvas" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+                <div class="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
+                    <span class="text-[10px] text-stone-400 bg-black/60 px-2.5 py-1 rounded-full border border-white/10">
+                        <i class="fa-solid fa-rotate mr-1 text-[#c5a059]"></i>滑動旋轉檢視古物細節
+                    </span>
+                    <span id="artifact-danger-tag" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#8a0303]/80 text-[#ffcccc] border border-[#ff4d4d]/40">
+                        詛咒等級：極危
+                    </span>
+                </div>
+            </div>
+
+            <!-- Relic Description -->
+            <div class="bg-black/45 rounded-xl p-3.5 border border-[#c5a059]/20 mb-3">
+                <div class="flex items-center justify-between mb-1">
+                    <h4 id="artifact-title" class="font-bold text-base text-[#f3d58d] tracking-wider">緋紅聖骸匣 · Blood Reliquary</h4>
+                    <span id="artifact-id" class="font-cinzel text-xs text-stone-500">#01 / 03</span>
+                </div>
+                <p id="artifact-desc" class="text-xs text-stone-300 leading-relaxed">
+                    以黑曜石與鍍金荊棘鍛造的古老聖物匣，內部封印著不斷跳動的暗紅晶核。靠近時耳邊會響起微弱的心跳與低語。
+                </p>
+            </div>
+
+            <!-- Relic Selector Tabs -->
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="switchArtifact(0)" id="art-tab-0" class="py-2.5 px-2 rounded-xl border border-[#f3d58d] bg-[#29191b] text-xs font-bold text-[#fff3d1] cursor-pointer transition-all">
+                    01. 緋紅聖骸匣
+                </button>
+                <button onclick="switchArtifact(1)" id="art-tab-1" class="py-2.5 px-2 rounded-xl border border-stone-700 bg-black/50 text-xs font-bold text-stone-400 hover:text-stone-200 cursor-pointer transition-all">
+                    02. 逆時懷錶
+                </button>
+                <button onclick="switchArtifact(2)" id="art-tab-2" class="py-2.5 px-2 rounded-xl border border-stone-700 bg-black/50 text-xs font-bold text-stone-400 hover:text-stone-200 cursor-pointer transition-all">
+                    03. 鴉羽面具
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 3: MOBILE SYSTEM SETTINGS (系統設定 - 畫質/靈敏度/音效/震動)       -->
+    <!-- ===================================================================== -->
+    <div id="settings-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="luxury-glass relative w-full max-w-lg rounded-2xl p-5 sm:p-6 max-h-[88vh] flex flex-col">
+            <div class="corner-ornament corner-tl"></div>
+            <div class="corner-ornament corner-tr"></div>
+            <div class="corner-ornament corner-bl"></div>
+            <div class="corner-ornament corner-br"></div>
+
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-[#c5a059]/25 pb-3.5 mb-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-bold tracking-[0.2em] text-[#f3d58d]">系統設定</h3>
+                    <p class="font-cinzel text-[10px] tracking-[0.3em] text-stone-400">MOBILE GRAPHICS & AUDIO SETTINGS</p>
+                </div>
+                <button onclick="closeModal('settings-modal')" class="w-9 h-9 rounded-lg border border-stone-700 hover:border-[#c5a059] flex items-center justify-center text-stone-300 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5 overflow-y-auto pr-1">
+                <!-- Graphics Quality Preset -->
+                <div>
+                    <div class="flex justify-between text-xs mb-2">
+                        <span class="text-stone-200 font-semibold tracking-wider">行動端渲染畫質 (GRAPHICS)</span>
+                        <span id="gfx-label" class="text-[#c5a059] font-cinzel">ULTRA · 60FPS</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setGraphicsQuality('LOW')" class="gfx-btn py-2 rounded-lg border border-stone-700 bg-black/50 text-xs font-cinzel text-stone-400 cursor-pointer" data-q="LOW">LOW</button>
+                        <button onclick="setGraphicsQuality('MED')" class="gfx-btn py-2 rounded-lg border border-stone-700 bg-black/50 text-xs font-cinzel text-stone-400 cursor-pointer" data-q="MED">MED</button>
+                        <button onclick="setGraphicsQuality('HIGH')" class="gfx-btn py-2 rounded-lg border border-stone-700 bg-black/50 text-xs font-cinzel text-stone-400 cursor-pointer" data-q="HIGH">HIGH</button>
+                        <button onclick="setGraphicsQuality('ULTRA')" class="gfx-btn py-2 rounded-lg border border-[#f3d58d] bg-[#2a1d14] text-xs font-cinzel text-[#fff3d1] font-bold cursor-pointer" data-q="ULTRA">ULTRA</button>
+                    </div>
+                </div>
+
+                <!-- Master Horror Audio Volume -->
+                <div>
+                    <div class="flex justify-between text-xs mb-2">
+                        <span class="text-stone-200 font-semibold tracking-wider">環境低頻與音效音量</span>
+                        <span id="vol-value" class="text-[#c5a059] font-cinzel">80%</span>
+                    </div>
+                    <input id="volume-slider" type="range" min="0" max="100" value="80" class="w-full" oninput="updateVolume(this.value)">
+                </div>
+
+                <!-- Touch Camera Sensitivity -->
+                <div>
+                    <div class="flex justify-between text-xs mb-2">
+                        <span class="text-stone-200 font-semibold tracking-wider">觸控視角靈敏度</span>
+                        <span id="sens-value" class="text-[#c5a059] font-cinzel">1.2x</span>
+                    </div>
+                    <input id="sens-slider" type="range" min="5" max="25" value="12" class="w-full" oninput="updateSensitivity(this.value)">
+                </div>
+
+                <!-- Haptic Vibration & Gyroscope Toggles -->
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div onclick="toggleSwitch('haptic')" class="rounded-xl border border-[#c5a059]/30 bg-black/40 p-3 flex items-center justify-between cursor-pointer">
+                        <div>
+                            <div class="text-xs font-bold text-stone-200">心跳觸覺震動</div>
+                            <div class="text-[10px] text-stone-500 font-cinzel">HAPTIC FEEDBACK</div>
+                        </div>
+                        <span id="haptic-status" class="text-xs font-bold text-emerald-400">開啟</span>
+                    </div>
+
+                    <div onclick="toggleSwitch('gyro')" class="rounded-xl border border-[#c5a059]/30 bg-black/40 p-3 flex items-center justify-between cursor-pointer">
+                        <div>
+                            <div class="text-xs font-bold text-stone-200">陀螺儀視差</div>
+                            <div class="text-[10px] text-stone-500 font-cinzel">GYRO PARALLAX</div>
+                        </div>
+                        <span id="gyro-status" class="text-xs font-bold text-emerald-400">開啟</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeModal('settings-modal'); openToast('系統設定已儲存並套用至渲染引擎');" class="mt-5 w-full py-3 rounded-xl bg-gradient-to-r from-[#5e4822] via-[#c5a059] to-[#5e4822] text-black font-bold text-sm tracking-[0.2em] cursor-pointer active:scale-98 transition-transform">
+                確認並套用
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL 4: SYSTEM NOTICE / LORE SCROLL (怪談公告)                         -->
+    <!-- ===================================================================== -->
+    <div id="notice-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="luxury-glass relative w-full max-w-md rounded-2xl p-5 sm:p-6">
+            <div class="corner-ornament corner-tl"></div>
+            <div class="corner-ornament corner-br"></div>
+            <div class="flex items-center justify-between border-b border-[#c5a059]/25 pb-3 mb-4">
+                <h3 class="text-base font-bold tracking-[0.2em] text-[#f3d58d]">大宅管理人手札 · 公告</h3>
+                <button onclick="closeModal('notice-modal')" class="w-8 h-8 rounded-lg border border-stone-700 flex items-center justify-center text-stone-300 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-xs text-stone-300 leading-relaxed">
+                <div class="p-3 rounded-xl bg-[#8a0303]/20 border border-[#8a0303]/50">
+                    <div class="font-bold text-[#ff8585] mb-1">【限時夢魘活動】血月彌撒夜</div>
+                    <p>即日起至滿月之夜，探索「鐘樓迴廊」有機率遭遇隱藏怨靈「無面修女」，擊退可獲得限定金色提燈外觀。</p>
+                </div>
+                <div class="p-3 rounded-xl bg-black/45 border border-stone-800">
+                    <div class="font-bold text-[#c5a059] mb-1">【行動端渲染優化 v2.4】</div>
+                    <p>新增即時燭光體積霧氣散射與空間雙耳音訊定位，建議於暗室配戴耳機遊玩。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- NEW GAME CINEMATIC TRANSITION OVERLAY                                 -->
+    <!-- ===================================================================== -->
+    <div id="transition-curtain" class="fixed inset-0 z-50 pointer-events-none bg-black opacity-0 transition-opacity duration-1000 flex flex-col items-center justify-center p-6 text-center">
+        <p id="transition-sub" class="font-cinzel text-xs tracking-[0.4em] text-[#c5a059] mb-3">ENTERING THE ABYSS...</p>
+        <h2 id="transition-title" class="text-2xl sm:text-4xl font-bold tracking-[0.25em] text-[#f3d58d]">序章：迷霧大宅</h2>
+        <div class="w-48 h-[1px] bg-gradient-to-r from-transparent via-[#8a0303] to-transparent mt-6"></div>
+    </div>
+
+    <!-- Custom Non-Blocking Toast Message Box -->
+    <div id="custom-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+        <div class="luxury-glass px-4 py-2.5 rounded-full border border-[#c5a059]/60 flex items-center gap-2.5 shadow-2xl">
+            <span class="w-2 h-2 rounded-full bg-[#c5a059]"></span>
+            <span id="toast-text" class="text-xs font-medium tracking-wider text-[#fff3d1] whitespace-nowrap">提示訊息</span>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * =========================================================================
+         * 1. WEB AUDIO API PROCEDURAL HORROR SOUND ENGINE (空間恐怖合成音效引擎)
+         * =========================================================================
+         */
+        const soundEngine = {
+            ctx: null,
+            masterGain: null,
+            isInitialized: false,
+            isMuted: false,
+            volume: 0.8,
+
+            init() {
+                if (this.isInitialized) {
+                    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                    return;
+                }
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                this.ctx = new AudioCtx();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = this.isMuted ? 0 : this.volume;
+                this.masterGain.connect(this.ctx.destination);
+                this.isInitialized = true;
+                this.startAmbientDrone();
+            },
+
+            setVolume(valPct) {
+                this.volume = Math.max(0, Math.min(1, valPct / 100));
+                if (this.masterGain && this.ctx) {
+                    this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime, 0.05);
+                }
+            },
+
+            toggleMute() {
+                this.isMuted = !this.isMuted;
+                if (this.masterGain && this.ctx) {
+                    this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume, this.ctx.currentTime, 0.05);
+                }
+                return this.isMuted;
+            },
+
+            startAmbientDrone() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [41.2, 43.65, 61.74].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const filter = this.ctx.createBiquadFilter();
+                    const gain = this.ctx.createGain();
+                    osc.type = idx === 0 ? 'sawtooth' : 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(145 + idx * 30, now);
+                    gain.gain.setValueAtTime(0.09 / (idx + 1), now);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start();
+                });
+            },
+
+            playUIChime(freq = 520, isDeep = false) {
+                if (!this.isInitialized || this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = isDeep ? 'triangle' : 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.45, now + 0.16);
+                gain.gain.setValueAtTime(0.16, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 0.19);
+            },
+
+            playNightmareSlam() {
+                if (!this.isInitialized || this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(110, now);
+                osc.frequency.exponentialRampToValueAtTime(28, now + 0.65);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 0.72);
+            },
+
+            playFootstep(isSprint = false) {
+                if (!this.isInitialized || this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(isSprint ? 95 : 72, now);
+                osc.frequency.exponentialRampToValueAtTime(28, now + 0.09);
+                gain.gain.setValueAtTime(isSprint ? 0.16 : 0.09, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 0.11);
+            },
+
+            playFlashlightClick() {
+                this.playUIChime(880, false);
+            },
+
+            playKeyPickup() {
+                if (!this.isInitialized || this.isMuted || !this.ctx) return;
+                [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+                    const now = this.ctx.currentTime + i * 0.06;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                });
+            },
+
+            playGearClank() {
+                this.playUIChime(240, true);
+                setTimeout(() => this.playUIChime(360, true), 110);
+            },
+
+            playFocusFlashBlast() {
+                if (!this.isInitialized || this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(980, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.42);
+                gain.gain.setValueAtTime(0.28, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 0.46);
+            },
+
+            playHeartbeat(intensity = 1.0) {
+                if (!this.isInitialized || this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                [0, 0.2].forEach((offset, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(idx === 0 ? 64 : 50, now + offset);
+                    osc.frequency.exponentialRampToValueAtTime(22, now + offset + 0.18);
+                    gain.gain.setValueAtTime((idx === 0 ? 0.32 : 0.2) * Math.min(1.4, intensity), now + offset);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now + offset);
+                    osc.stop(now + offset + 0.22);
+                });
+            },
+
+            playGhostScreech() {
+                if (!this.isInitialized || this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                [320, 342, 640].forEach(f => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(f, now);
+                    osc.frequency.linearRampToValueAtTime(f * 1.35, now + 0.3);
+                    osc.frequency.exponentialRampToValueAtTime(85, now + 0.75);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.78);
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+                });
+            }
+        };
+
+        /**
+         * =========================================================================
+         * 2. MAIN 3D SCENE GLOBALS & TITLE CATHEDRAL SCENE (主場景變數與大殿建立)
+         * =========================================================================
+         */
+        let scene, camera, renderer, clock;
+        let candleLight1, candleLight2, moonLight, lightningLight;
+        let candleFlame1, candleFlame2, altarCross, pendulumMesh, shadowGhost;
+        let dustParticles, floatingEmbers;
+        let targetCamX = 0, targetCamY = 1.65;
+        let isDragging = false, prevPointerX = 0, prevPointerY = 0;
+        let touchSensitivity = 1.2;
+        let hapticEnabled = true;
+        let gyroEnabled = true;
+
+        function initMain3DScene() {
+            const container = document.getElementById('webgl-container');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x040406);
+            scene.fog = new THREE.FogExp2(0x070609, 0.072);
+
+            camera = new THREE.PerspectiveCamera(58, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(0, 1.65, 6.2);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            buildGothicHallway();
+            buildAltarAndCandles();
+            buildAtmosphericParticles();
+            setupLighting();
+            setupCameraInteraction(renderer.domElement);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        /**
+         * =========================================================================
+         * 2B. COMPLETE MULTI-CHAPTER 3D HORROR SURVIVAL ENGINE & SAVE SYSTEM
+         * =========================================================================
+         */
+        const SAVE_STORAGE_KEY = 'silent_abyss_save_v3';
+        let playerProfile = {
+            shards: 1480,
+            sanity: 100,
+            unlockedChapter: 1, // 1, 2, or 3
+            clearedChapters: [],
+            collectedNotesTotal: 0
+        };
+
+        function loadPlayerSave() {
+            try {
+                const raw = localStorage.getItem(SAVE_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    playerProfile = { ...playerProfile, ...parsed };
+                }
+            } catch (e) {
+                console.warn('Save load fallback:', e);
+            }
+            syncMainMenuProfileUI();
+        }
+
+        function persistPlayerSave() {
+            try {
+                localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(playerProfile));
+            } catch (e) {
+                console.warn('Save write fallback:', e);
+            }
+            syncMainMenuProfileUI();
+        }
+
+        function syncMainMenuProfileUI() {
+            const shardsEl = document.getElementById('menu-shards-display');
+            const sanityEl = document.getElementById('menu-sanity-display');
+            const contSubEl = document.getElementById('menu-continue-sub');
+            const progBadgeEl = document.getElementById('menu-progress-badge');
+
+            if (shardsEl) shardsEl.textContent = playerProfile.shards.toLocaleString();
+            if (sanityEl) sanityEl.textContent = `SANITY: ${Math.round(playerProfile.sanity)}%`;
+            if (progBadgeEl) progBadgeEl.textContent = `通關 ${playerProfile.clearedChapters.length}/3`;
+
+            const chNames = {
+                1: 'CONTINUE · 第一章 泣血聖堂',
+                2: 'CONTINUE · 第二章 無聲鐘樓',
+                3: 'CONTINUE · 第三章 深淵主祭壇'
+            };
+            if (contSubEl) {
+                contSubEl.textContent = chNames[playerProfile.unlockedChapter] || chNames[1];
+            }
+            renderChapterCards();
+        }
+
+        const CHAPTER_CONFIGS = {
+            1: {
+                id: 1,
+                code: 'CH. 01',
+                kanji: '壹',
+                title: '第一章：泣血聖堂 · 聖像封印',
+                shortTitle: 'CH.01 · 泣血聖堂',
+                desc: '迷霧籠罩的哥德石砌聖堂。收集 3 把染血古銅鑰匙，並依序插入聖堂大門前的三座石像底座解除封印。',
+                fogColor: 0x06050a,
+                fogDensity: 0.065,
+                ambientColor: 0x181a28,
+                ambientIntensity: 0.34,
+                wallColor: 0x222028,
+                ghostName: '無面修女',
+                ghostColor: 0xd90404,
+                ghostBaseSpeed: 2.2,
+                ghostChaseSpeed: 3.15,
+                itemType: 'KEY',
+                itemTotal: 3,
+                puzzleTotal: 3,
+                rewardShards: 500,
+                grid: [
+                    [1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                    [1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
+                    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+                    [1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1],
+                    [1,0,0,0,0,0,1,0,1,0,1,0,0,0,0,0,1],
+                    [1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,1,1,1,0,1,1,0,1,1,0,1,1,1,0,1],
+                    [1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                    [1,1,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1],
+                    [1,0,0,0,0,0,1,0,1,0,1,0,0,0,0,0,1],
+                    [1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1],
+                    [1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                    [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ],
+                spawn: { r: 15, c: 8 },
+                items: [
+                    { r: 1, c: 1, title: '染血古銅鑰匙・聖父' },
+                    { r: 1, c: 15, title: '染血古銅鑰匙・聖子' },
+                    { r: 13, c: 1, title: '染血古銅鑰匙・聖靈' }
+                ],
+                puzzles: [
+                    { r: 1, c: 7, title: '左側聖像底座' },
+                    { r: 1, c: 9, title: '右側聖像底座' },
+                    { r: 2, c: 8, title: '中央祭壇封印碑' }
+                ],
+                supplies: [
+                    { type: 'BATTERY', r: 5, c: 15, title: '高壓手電筒電池' },
+                    { type: 'SEDATIVE', r: 11, c: 15, title: '鎮靜安神劑' }
+                ],
+                notes: [
+                    { r: 13, c: 8, title: '守夜人手札・封印儀式', body: '「聖堂北端的封印大門由三座聖像鎖住。先在東西兩翼與西南地窖尋回三把染血鑰匙，再逐一插入門前的三座底座即可解除封印。」' },
+                    { r: 5, c: 1, title: '修女懺悔錄・強光弱點', body: '「無面修女畏懼高強度聖光。遭遇追擊時，按下右側『強光』技能可瞬間致盲並震退她！」' }
+                ],
+                waypoints: [
+                    { r: 7, c: 8 }, { r: 3, c: 4 }, { r: 3, c: 12 }, { r: 11, c: 12 }, { r: 11, c: 4 }
+                ]
+            },
+            2: {
+                id: 2,
+                code: 'CH. 02',
+                kanji: '貳',
+                title: '第二章：無聲鐘樓 · 盲眼執刑者',
+                shortTitle: 'CH.02 · 無聲鐘樓',
+                desc: '幽暗潮濕的地下鐘樓墓穴。尋找 3 枚古董黃銅齒輪修復升降梯控制箱。盲眼執刑者對聲音極度敏感，善用「屏息」潛行！',
+                fogColor: 0x050708,
+                fogDensity: 0.078,
+                ambientColor: 0x11191d,
+                ambientIntensity: 0.24,
+                wallColor: 0x1a1f22,
+                ghostName: '盲眼執刑者',
+                ghostColor: 0xff6a00,
+                ghostBaseSpeed: 2.0,
+                ghostChaseSpeed: 3.75,
+                itemType: 'GEAR',
+                itemTotal: 3,
+                puzzleTotal: 1,
+                rewardShards: 800,
+                grid: [
+                    [1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1],
+                    [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,0,1],
+                    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+                    [1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,0,1,0,1],
+                    [1,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,1],
+                    [1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,0,1,1,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,0,1],
+                    [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+                    [1,1,1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,1,1],
+                    [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+                    [1,0,1,1,1,1,1,0,1,0,1,0,1,1,1,1,1,0,1],
+                    [1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1],
+                    [1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,1,1,0,1],
+                    [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+                    [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ],
+                spawn: { r: 17, c: 9 },
+                items: [
+                    { r: 1, c: 1, title: '黃銅主傳動齒輪' },
+                    { r: 1, c: 17, title: '精鋼擒縱齒輪' },
+                    { r: 15, c: 1, title: '鐘擺平衡齒輪' }
+                ],
+                puzzles: [
+                    { r: 1, c: 9, title: '升降梯齒輪控制箱' }
+                ],
+                supplies: [
+                    { type: 'BATTERY', r: 9, c: 1, title: '軍用鋰電池' },
+                    { type: 'SEDATIVE', r: 9, c: 17, title: '高純度鎮靜劑' },
+                    { type: 'BATTERY', r: 15, c: 17, title: '備用電池' }
+                ],
+                notes: [
+                    { r: 15, c: 9, title: '鐘樓技師遺書・無聲法則', body: '「執刑者雙目已盲，但聽覺敏銳得可怕！切勿在他附近衝刺或頻繁開關手電筒。按下左下角『屏息』並保持靜止，他就會從你身邊走過。」' },
+                    { r: 7, c: 9, title: '升降梯操作手冊', body: '「集齊三枚黃銅齒輪後，前往最北端升降梯閘門前的控制箱修復傳動軸即可啟動逃生電梯。」' }
+                ],
+                waypoints: [
+                    { r: 9, c: 9 }, { r: 3, c: 3 }, { r: 3, c: 15 }, { r: 13, c: 15 }, { r: 13, c: 3 }
+                ]
+            },
+            3: {
+                id: 3,
+                code: 'FINAL',
+                kanji: '終',
+                title: '終章：深淵主祭壇 · 永夜逆轉',
+                shortTitle: 'FINAL · 深淵主祭壇',
+                desc: '血月紅霧籠罩的禁忌大殿。收集 4 份禁忌聖典殘頁，於中央黑曜石祭壇點燃淨化聖火，抵禦瞬移逼近的深淵主教並衝向聖光之門！',
+                fogColor: 0x120406,
+                fogDensity: 0.068,
+                ambientColor: 0x2b0d12,
+                ambientIntensity: 0.35,
+                wallColor: 0x261418,
+                ghostName: '深淵主教',
+                ghostColor: 0xff0044,
+                ghostBaseSpeed: 2.55,
+                ghostChaseSpeed: 3.55,
+                itemType: 'SCRIPTURE',
+                itemTotal: 4,
+                puzzleTotal: 1,
+                rewardShards: 1500,
+                grid: [
+                    [1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+                    [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+                    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+                    [1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1,0,1],
+                    [1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,1],
+                    [1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,1,1,1,0,1,0,1,1,0,1,1,0,1,0,1,1,1,0,1],
+                    [1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1],
+                    [1,1,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,1,1],
+                    [1,0,0,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,1],
+                    [1,0,1,1,1,0,1,0,1,1,0,1,1,0,1,0,1,1,1,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1],
+                    [1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,1],
+                    [1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1,0,1],
+                    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+                    [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+                    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+                ],
+                spawn: { r: 19, c: 10 },
+                items: [
+                    { r: 1, c: 1, title: '禁忌聖典・創世篇' },
+                    { r: 1, c: 19, title: '禁忌聖典・血月篇' },
+                    { r: 19, c: 1, title: '禁忌聖典・贖罪篇' },
+                    { r: 19, c: 19, title: '禁忌聖典・破曉篇' }
+                ],
+                puzzles: [
+                    { r: 10, c: 10, title: '中央黑曜石淨化祭壇' }
+                ],
+                supplies: [
+                    { type: 'BATTERY', r: 7, c: 1, title: '聖光蓄電池' },
+                    { type: 'SEDATIVE', r: 7, c: 19, title: '主教秘製鎮靜劑' },
+                    { type: 'BATTERY', r: 13, c: 19, title: '備用電池' },
+                    { type: 'SEDATIVE', r: 13, c: 1, title: '鎮靜安神劑' }
+                ],
+                notes: [
+                    { r: 17, c: 10, title: '大祭司最終手記', body: '「四隅書庫藏有逆轉儀式的四份禁忌聖典。集齊後前往大殿正中央（row 10, col 10）點燃淨化聖火，聖光之門便會在最北端開啟！」' }
+                ],
+                waypoints: [
+                    { r: 10, c: 10 }, { r: 3, c: 3 }, { r: 3, c: 17 }, { r: 17, c: 17 }, { r: 17, c: 3 }
+                ]
+            }
+        };
+
+        function renderChapterCards() {
+            const container = document.getElementById('chapters-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            [1, 2, 3].forEach(chId => {
+                const cfg = CHAPTER_CONFIGS[chId];
+                const isUnlocked = chId <= playerProfile.unlockedChapter;
+                const isCleared = playerProfile.clearedChapters.includes(chId);
+
+                const card = document.createElement('div');
+                card.onclick = () => selectChapter(chId, isUnlocked);
+
+                if (!isUnlocked) {
+                    card.className = "rounded-xl border border-stone-800 bg-[#0b0a0d]/85 p-4 flex items-center justify-between gap-4 opacity-65 cursor-pointer";
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-14 h-14 rounded-lg bg-stone-900 border border-stone-700 flex flex-col items-center justify-center shrink-0">
+                                <span class="font-cinzel text-[10px] text-stone-500">${cfg.code}</span>
+                                <i class="fa-solid fa-lock text-stone-500 mt-0.5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm sm:text-base text-stone-400 tracking-wider">${cfg.title}</h4>
+                                <p class="text-xs text-stone-500 mt-1">需先通關前序章節方可解除深淵封印。</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-lock text-stone-600 text-sm"></i>
+                    `;
+                } else {
+                    const statusBadge = isCleared
+                        ? `<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-600/40 text-emerald-300">已通關</span>`
+                        : `<span class="text-[10px] px-2 py-0.5 rounded bg-[#8a0303] text-white">可挑戰</span>`;
+
+                    card.className = "rounded-xl border border-[#c5a059]/45 bg-gradient-to-r from-[#1d1417] to-[#0f0e12] p-4 flex items-center justify-between gap-4 cursor-pointer hover:border-[#f3d58d] transition-all shadow-lg";
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-14 h-14 rounded-lg bg-[#2f1216] border border-[#c5a059]/60 flex flex-col items-center justify-center shrink-0">
+                                <span class="font-cinzel text-[10px] text-[#c5a059]">${cfg.code}</span>
+                                <span class="text-base font-black text-[#fff3d1]">${cfg.kanji}</span>
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h4 class="font-bold text-sm sm:text-base text-[#f3d58d] tracking-wider">${cfg.title}</h4>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-xs text-stone-300 mt-1 line-clamp-2">${cfg.desc}</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-play text-[#f3d58d] text-sm shrink-0"></i>
+                    `;
+                }
+                container.appendChild(card);
+            });
+        }
+
+        const gameState = {
+            mode: 'MENU', // 'MENU' | 'PLAYING' | 'PAUSED' | 'ENDING'
+            chapterId: 1,
+            sanity: 100,
+            stamina: 100,
+            battery: 100,
+            flashlightOn: true,
+            isStealth: false,
+            focusFlashCooldown: 0,
+            itemsCollected: 0,
+            itemsRequired: 3,
+            puzzlesSolved: 0,
+            puzzlesRequired: 3,
+            gateUnlocked: false,
+            notesCollected: 0,
+            invBatteries: 1,
+            invSedatives: 1,
+            elapsedSeconds: 0,
+            yaw: 0,
+            pitch: 0,
+            moveForward: 0,
+            moveRight: 0,
+            isSprinting: false,
+            stepTimer: 0,
+            heartbeatTimer: 0
+        };
+
+        let levelGroup = null;
+        let wallColliders = [];
+        let interactables = [];
+        let playerFlashlight = null;
+        let playerFlashTarget = null;
+        let ghostEntity = null;
+        let ghostState = {
+            aiMode: 'PATROL', // 'PATROL' | 'CHASE' | 'STUNNED'
+            waypoints: [],
+            currentWaypoint: 0,
+            stunTimer: 0,
+            teleportCooldown: 12
+        };
+        let activeNearbyItem = null;
+        const keysPressed = {};
+        const CELL_SIZE = 4.0;
+
+        function gridToWorld(row, col, gridSize) {
+            const offset = (gridSize * CELL_SIZE) / 2 - CELL_SIZE / 2;
+            return {
+                x: col * CELL_SIZE - offset,
+                z: row * CELL_SIZE - offset
+            };
+        }
+
+        function clearCurrentSceneObjects() {
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+        }
+
+        function buildPlayableManorLevel(chapterId = 1) {
+            clearCurrentSceneObjects();
+            wallColliders = [];
+            interactables = [];
+
+            const cfg = CHAPTER_CONFIGS[chapterId] || CHAPTER_CONFIGS[1];
+            const grid = cfg.grid;
+            const gridSize = grid.length;
+
+            scene.background = new THREE.Color(cfg.fogColor);
+            scene.fog = new THREE.FogExp2(cfg.fogColor, cfg.fogDensity);
+
+            levelGroup = new THREE.Group();
+            scene.add(levelGroup);
+
+            const dimAmbient = new THREE.AmbientLight(cfg.ambientColor, cfg.ambientIntensity);
+            levelGroup.add(dimAmbient);
+
+            // Floor & Ceiling
+            const totalSize = gridSize * CELL_SIZE;
+            const floorMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(totalSize, totalSize),
+                new THREE.MeshStandardMaterial({ color: 0x151419, roughness: 0.45, metalness: 0.25 })
+            );
+            floorMesh.rotation.x = -Math.PI / 2;
+            floorMesh.receiveShadow = true;
+            levelGroup.add(floorMesh);
+
+            const ceilingMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(totalSize, totalSize),
+                new THREE.MeshStandardMaterial({ color: 0x0a090d, roughness: 0.9 })
+            );
+            ceilingMesh.rotation.x = Math.PI / 2;
+            ceilingMesh.position.y = 4.2;
+            levelGroup.add(ceilingMesh);
+
+            const wallMat = new THREE.MeshStandardMaterial({ color: cfg.wallColor, roughness: 0.78, metalness: 0.14 });
+            const trimGoldMat = new THREE.MeshStandardMaterial({ color: 0xc5a059, roughness: 0.35, metalness: 0.85 });
+            const gateMat = new THREE.MeshStandardMaterial({ color: 0x5c0a0e, roughness: 0.38, metalness: 0.65 });
+
+            const wallGeo = new THREE.BoxGeometry(CELL_SIZE, 4.2, CELL_SIZE);
+            const baseboardGeo = new THREE.BoxGeometry(CELL_SIZE + 0.06, 0.25, CELL_SIZE + 0.06);
+
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    const cell = grid[r][c];
+                    const pos = gridToWorld(r, c, gridSize);
+
+                    if (cell === 1) {
+                        const wall = new THREE.Mesh(wallGeo, wallMat);
+                        wall.position.set(pos.x, 2.1, pos.z);
+                        wall.castShadow = true;
+                        wall.receiveShadow = true;
+                        levelGroup.add(wall);
+
+                        const base = new THREE.Mesh(baseboardGeo, trimGoldMat);
+                        base.position.set(pos.x, 0.125, pos.z);
+                        levelGroup.add(base);
+
+                        wallColliders.push({
+                            minX: pos.x - CELL_SIZE / 2,
+                            maxX: pos.x + CELL_SIZE / 2,
+                            minZ: pos.z - CELL_SIZE / 2,
+                            maxZ: pos.z + CELL_SIZE / 2
+                        });
+                    } else if (cell === 2) {
+                        const gateGroup = new THREE.Group();
+                        gateGroup.position.set(pos.x, 0, pos.z);
+
+                        const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(CELL_SIZE, 4.0, 0.45), gateMat);
+                        doorMesh.position.y = 2.0;
+                        const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.4, 0.55), trimGoldMat);
+                        crossV.position.y = 2.1;
+                        const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.22, 0.55), trimGoldMat);
+                        crossH.position.y = 2.45;
+
+                        const gateLight = new THREE.PointLight(0xff2a2a, 2.5, 10);
+                        gateLight.position.set(0, 2.6, 1.3);
+
+                        gateGroup.add(doorMesh, crossV, crossH, gateLight);
+                        levelGroup.add(gateGroup);
+
+                        wallColliders.push({
+                            minX: pos.x - CELL_SIZE / 2,
+                            maxX: pos.x + CELL_SIZE / 2,
+                            minZ: pos.z - CELL_SIZE / 2,
+                            maxZ: pos.z + CELL_SIZE / 2
+                        });
+
+                        interactables.push({
+                            type: 'GATE',
+                            title: chapterId === 2 ? '逃生升降梯閘門' : (chapterId === 3 ? '淨化聖光之門' : '聖堂封印大門'),
+                            mesh: gateGroup,
+                            gateLight: gateLight,
+                            x: pos.x,
+                            z: pos.z + 1.3,
+                            collected: false
+                        });
+                    }
+                }
+            }
+
+            // Atmospheric Wall Sconces at Key Coordinates
+            const torchCoords = [
+                [1, 1], [1, gridSize - 2], [gridSize - 2, 1], [gridSize - 2, gridSize - 2],
+                [Math.floor(gridSize / 2), Math.floor(gridSize / 2)]
+            ];
+            torchCoords.forEach(([r, c]) => {
+                if (grid[r] && grid[r][c] === 0) {
+                    const p = gridToWorld(r, c, gridSize);
+                    const torchLight = new THREE.PointLight(chapterId === 3 ? 0xff2e4c : 0xff7b29, 1.9, 11, 1.7);
+                    torchLight.position.set(p.x, 2.8, p.z);
+                    levelGroup.add(torchLight);
+                }
+            });
+
+            // Spawn Primary Quest Items (Keys / Brass Gears / Forbidden Scriptures)
+            cfg.items.forEach(it => {
+                const p = gridToWorld(it.r, it.c, gridSize);
+                const group = new THREE.Group();
+                group.position.set(p.x, 1.15, p.z);
+
+                if (cfg.itemType === 'KEY') {
+                    const bow = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.045, 8, 20), trimGoldMat);
+                    bow.position.y = 0.22;
+                    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 8), trimGoldMat);
+                    shaft.position.y = -0.08;
+                    const bit = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.04), trimGoldMat);
+                    bit.position.set(0.07, -0.24, 0);
+                    group.add(bow, shaft, bit);
+                } else if (cfg.itemType === 'GEAR') {
+                    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.06, 8, 16), trimGoldMat);
+                    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.12, 12), trimGoldMat);
+                    hub.rotation.x = Math.PI / 2;
+                    group.add(ring, hub);
+                } else {
+                    const tome = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.36, 0.46, 0.08),
+                        new THREE.MeshStandardMaterial({ color: 0x6b0f1a, emissive: 0x3b040a, roughness: 0.4 })
+                    );
+                    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.48, 0.04), trimGoldMat);
+                    group.add(tome, trim);
+                }
+
+                const glow = new THREE.PointLight(0xffd27d, 1.8, 5.5);
+                group.add(glow);
+                levelGroup.add(group);
+
+                interactables.push({
+                    type: 'QUEST_ITEM',
+                    title: it.title,
+                    mesh: group,
+                    x: p.x,
+                    z: p.z,
+                    collected: false
+                });
+            });
+
+            // Spawn Environmental Puzzle Pedestals / Gearboxes / Purification Altar
+            cfg.puzzles.forEach(pz => {
+                const p = gridToWorld(pz.r, pz.c, gridSize);
+                const pzGroup = new THREE.Group();
+                pzGroup.position.set(p.x, 0, p.z);
+
+                const pedestal = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.9, 1.15, 0.9),
+                    new THREE.MeshStandardMaterial({ color: 0x18161d, roughness: 0.5, metalness: 0.4 })
+                );
+                pedestal.position.y = 0.575;
+
+                const orbMat = new THREE.MeshStandardMaterial({
+                    color: 0x8a0303,
+                    emissive: 0x550000,
+                    emissiveIntensity: 1.2
+                });
+                const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.22, 0), orbMat);
+                orb.position.y = 1.45;
+
+                const pzLight = new THREE.PointLight(0xff3b3b, 1.6, 6);
+                pzLight.position.y = 1.6;
+
+                pzGroup.add(pedestal, orb, pzLight);
+                levelGroup.add(pzGroup);
+
+                interactables.push({
+                    type: 'PUZZLE',
+                    title: pz.title,
+                    mesh: pzGroup,
+                    orb: orb,
+                    light: pzLight,
+                    x: p.x,
+                    z: p.z,
+                    collected: false
+                });
+            });
+
+            // Spawn Collectible Supplies (Batteries & Sedatives)
+            const batMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x064e3b, metalness: 0.6, roughness: 0.3 });
+            const sedMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0c4a6e, metalness: 0.5, roughness: 0.2 });
+
+            cfg.supplies.forEach(sup => {
+                const p = gridToWorld(sup.r, sup.c, gridSize);
+                const sGroup = new THREE.Group();
+                sGroup.position.set(p.x, 1.0, p.z);
+
+                if (sup.type === 'BATTERY') {
+                    const cell = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.34, 14), batMat);
+                    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.06, 10), trimGoldMat);
+                    cap.position.y = 0.2;
+                    const glow = new THREE.PointLight(0x4ade80, 1.3, 4.5);
+                    sGroup.add(cell, cap, glow);
+                } else {
+                    const vial = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.36, 12), sedMat);
+                    const plunger = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 8), trimGoldMat);
+                    plunger.position.y = 0.25;
+                    const glow = new THREE.PointLight(0x38bdf8, 1.3, 4.5);
+                    sGroup.add(vial, plunger, glow);
+                }
+
+                levelGroup.add(sGroup);
+                interactables.push({
+                    type: sup.type,
+                    title: sup.title,
+                    mesh: sGroup,
+                    x: p.x,
+                    z: p.z,
+                    collected: false
+                });
+            });
+
+            // Spawn Lore Diary Notes
+            const paperMat = new THREE.MeshStandardMaterial({ color: 0xf5e6c8, emissive: 0x3b2f1d, roughness: 0.85, side: THREE.DoubleSide });
+            cfg.notes.forEach(n => {
+                const p = gridToWorld(n.r, n.c, gridSize);
+                const noteGroup = new THREE.Group();
+                noteGroup.position.set(p.x, 1.1, p.z);
+
+                const page = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.46), paperMat);
+                page.rotation.x = -0.35;
+                const glow = new THREE.PointLight(0xf3d58d, 1.2, 4.0);
+                noteGroup.add(page, glow);
+                levelGroup.add(noteGroup);
+
+                interactables.push({
+                    type: 'NOTE',
+                    title: n.title,
+                    body: n.body,
+                    mesh: noteGroup,
+                    x: p.x,
+                    z: p.z,
+                    collected: false
+                });
+            });
+
+            // Build Chapter-Specific Roaming Horror Threat
+            buildRoamingGhostEntity(cfg, gridSize);
+
+            // Player First-Person Flashlight
+            playerFlashlight = new THREE.SpotLight(0xfff4dc, 4.4, 23, Math.PI / 5.0, 0.45, 1.2);
+            playerFlashlight.castShadow = true;
+            playerFlashTarget = new THREE.Object3D();
+            levelGroup.add(playerFlashlight);
+            levelGroup.add(playerFlashTarget);
+            playerFlashlight.target = playerFlashTarget;
+
+            // Player Spawn
+            const spawn = gridToWorld(cfg.spawn.r, cfg.spawn.c, gridSize);
+            camera.position.set(spawn.x, 1.72, spawn.z);
+            gameState.yaw = 0;
+            gameState.pitch = 0;
+        }
+
+        function buildRoamingGhostEntity(cfg, gridSize) {
+            ghostEntity = new THREE.Group();
+
+            const robeMat = new THREE.MeshStandardMaterial({
+                color: 0x09080d,
+                roughness: 0.9,
+                transparent: true,
+                opacity: 0.94
+            });
+            const body = new THREE.Mesh(new THREE.ConeGeometry(0.58, 2.4, 18, 1, true), robeMat);
+            body.position.y = 1.2;
+
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(0.24, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0x8f8884, roughness: 0.6 })
+            );
+            head.position.set(0, 2.18, 0.05);
+
+            // Chapter-specific visual features (Crown for Bishop, Cleaver/Horns for Executioner)
+            if (cfg.id === 3) {
+                const mitre = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.25, 0.55, 4),
+                    new THREE.MeshStandardMaterial({ color: 0xc5a059, metalness: 0.85, roughness: 0.25 })
+                );
+                mitre.position.set(0, 2.55, 0.05);
+                ghostEntity.add(mitre);
+            }
+
+            const eyeMat = new THREE.MeshBasicMaterial({ color: cfg.ghostColor });
+            const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), eyeMat);
+            eyeL.position.set(-0.08, 2.2, 0.26);
+            const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), eyeMat);
+            eyeR.position.set(0.08, 2.2, 0.26);
+
+            const ghostLight = new THREE.PointLight(cfg.ghostColor, 2.5, 9.0);
+            ghostLight.position.set(0, 1.8, 0.3);
+
+            ghostEntity.add(body, head, eyeL, eyeR, ghostLight);
+
+            ghostState.waypoints = cfg.waypoints.map(wp => gridToWorld(wp.r, wp.c, gridSize));
+            ghostState.currentWaypoint = 0;
+            ghostState.aiMode = 'PATROL';
+            ghostState.stunTimer = 0;
+            ghostState.teleportCooldown = 14;
+
+            const startWp = ghostState.waypoints[0];
+            ghostEntity.position.set(startWp.x, 0, startWp.z);
+            levelGroup.add(ghostEntity);
+        }
+
+        function updateObjectiveTextUI() {
+            const cfg = CHAPTER_CONFIGS[gameState.chapterId];
+            const objEl = document.getElementById('hud-objective-text');
+            if (!objEl || !cfg) return;
+
+            if (gameState.gateUnlocked) {
+                objEl.textContent = '封印已解除！立即衝向最北端逃生大門！';
+            } else if (gameState.itemsCollected < gameState.itemsRequired) {
+                const label = cfg.itemType === 'KEY' ? '古銅鑰匙' : (cfg.itemType === 'GEAR' ? '黃銅齒輪' : '禁忌聖典');
+                objEl.textContent = `收集${label} (${gameState.itemsCollected}/${gameState.itemsRequired})`;
+            } else {
+                const action = cfg.id === 1
+                    ? `將鑰匙插入門前聖像底座 (${gameState.puzzlesSolved}/${gameState.puzzlesRequired})`
+                    : (cfg.id === 2 ? '前往北端升降梯控制箱修復齒輪' : '前往大殿正中央黑曜石祭壇點燃聖火');
+                objEl.textContent = action;
+            }
+        }
+
+        function updateCompassDirection(playerLookDir) {
+            // Find nearest active objective target (Item -> Puzzle -> Gate)
+            let target = null;
+            let bestDist = Infinity;
+            const priorityType = gameState.gateUnlocked
+                ? 'GATE'
+                : (gameState.itemsCollected < gameState.itemsRequired ? 'QUEST_ITEM' : 'PUZZLE');
+
+            interactables.forEach(it => {
+                if (it.collected) return;
+                if (it.type === priorityType) {
+                    const d = Math.hypot(it.x - camera.position.x, it.z - camera.position.z);
+                    if (d < bestDist) {
+                        bestDist = d;
+                        target = it;
+                    }
+                }
+            });
+
+            const needle = document.getElementById('compass-needle');
+            if (!needle || !target) return;
+
+            const toTargetAngle = Math.atan2(-(target.x - camera.position.x), -(target.z - camera.position.z));
+            let relAngle = toTargetAngle - gameState.yaw;
+            needle.style.transform = `rotate(${-relAngle}rad)`;
+        }
+
+        function updateGameplayLoop(dt) {
+            if (gameState.mode !== 'PLAYING') return;
+
+            gameState.elapsedSeconds += dt;
+            if (gameState.focusFlashCooldown > 0) {
+                gameState.focusFlashCooldown = Math.max(0, gameState.focusFlashCooldown - dt);
+                const lbl = document.getElementById('focus-flash-label');
+                if (lbl) lbl.textContent = gameState.focusFlashCooldown > 0 ? `${Math.ceil(gameState.focusFlashCooldown)}s` : '強光';
+            }
+
+            // 1. Movement (Joystick + Keyboard)
+            let fwdInput = gameState.moveForward;
+            let rightInput = gameState.moveRight;
+            if (keysPressed['KeyW'] || keysPressed['ArrowUp']) fwdInput += 1;
+            if (keysPressed['KeyS'] || keysPressed['ArrowDown']) fwdInput -= 1;
+            if (keysPressed['KeyD'] || keysPressed['ArrowRight']) rightInput += 1;
+            if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) rightInput -= 1;
+
+            const inputMag = Math.hypot(fwdInput, rightInput);
+            if (inputMag > 1) {
+                fwdInput /= inputMag;
+                rightInput /= inputMag;
+            }
+
+            const wantsSprint = (gameState.isSprinting || keysPressed['ShiftLeft'] || keysPressed['ShiftRight']) && !gameState.isStealth;
+            const canSprint = wantsSprint && inputMag > 0.1 && gameState.stamina > 2;
+
+            if (canSprint) {
+                gameState.stamina = Math.max(0, gameState.stamina - 26 * dt);
+            } else {
+                gameState.stamina = Math.min(100, gameState.stamina + (gameState.isStealth ? 22 : 16) * dt);
+            }
+
+            const moveSpeed = gameState.isStealth ? 1.85 : (canSprint ? 5.65 : 3.35);
+            const targetEyeHeight = gameState.isStealth ? 1.18 : 1.72;
+
+            const forwardX = -Math.sin(gameState.yaw);
+            const forwardZ = -Math.cos(gameState.yaw);
+            const rightX = Math.cos(gameState.yaw);
+            const rightZ = -Math.sin(gameState.yaw);
+
+            const velX = (forwardX * fwdInput + rightX * rightInput) * moveSpeed * dt;
+            const velZ = (forwardZ * fwdInput + rightZ * rightInput) * moveSpeed * dt;
+
+            if (!checkCircleWallCollision(camera.position.x + velX, camera.position.z, 0.62)) {
+                camera.position.x += velX;
+            }
+            if (!checkCircleWallCollision(camera.position.x, camera.position.z + velZ, 0.62)) {
+                camera.position.z += velZ;
+            }
+
+            // Head-Bobbing & Footstep Audio (Silent when Stealth)
+            if (inputMag > 0.12) {
+                const bobFreq = canSprint ? 13.5 : (gameState.isStealth ? 5.5 : 9.0);
+                const bobAmp = canSprint ? 0.065 : (gameState.isStealth ? 0.018 : 0.038);
+                camera.position.y += (targetEyeHeight + Math.sin(gameState.elapsedSeconds * bobFreq) * bobAmp - camera.position.y) * 0.25;
+
+                if (!gameState.isStealth) {
+                    gameState.stepTimer += dt * (canSprint ? 1.65 : 1.0);
+                    if (gameState.stepTimer >= 0.52) {
+                        gameState.stepTimer = 0;
+                        soundEngine.playFootstep(canSprint);
+                    }
+                }
+            } else {
+                camera.position.y += (targetEyeHeight - camera.position.y) * 0.14;
+            }
+
+            const lookDir = new THREE.Vector3(
+                -Math.sin(gameState.yaw) * Math.cos(gameState.pitch),
+                Math.sin(gameState.pitch),
+                -Math.cos(gameState.yaw) * Math.cos(gameState.pitch)
+            );
+            camera.lookAt(camera.position.clone().add(lookDir));
+
+            // 2. Flashlight Battery & SpotLight
+            if (gameState.flashlightOn && gameState.battery > 0) {
+                gameState.battery = Math.max(0, gameState.battery - 1.25 * dt);
+                if (gameState.battery <= 0) {
+                    gameState.flashlightOn = false;
+                    soundEngine.playFlashlightClick();
+                    openToast('手電筒電量已耗盡！請使用備用電池');
+                }
+            }
+            if (playerFlashlight && playerFlashTarget) {
+                playerFlashlight.intensity = gameState.flashlightOn ? (gameState.battery < 15 ? 2.2 + Math.random() * 1.5 : 4.4) : 0;
+                playerFlashlight.position.copy(camera.position);
+                playerFlashTarget.position.copy(camera.position).add(lookDir.clone().multiplyScalar(8));
+            }
+
+            // 3. Interactables Detection
+            activeNearbyItem = null;
+            let closestDist = 2.75;
+
+            interactables.forEach(item => {
+                if (item.collected) return;
+                if (['QUEST_ITEM', 'BATTERY', 'SEDATIVE', 'NOTE'].includes(item.type)) {
+                    item.mesh.rotation.y += 1.8 * dt;
+                    item.mesh.position.y = 1.1 + Math.sin(gameState.elapsedSeconds * 3.0) * 0.08;
+                } else if (item.type === 'PUZZLE' && item.orb) {
+                    item.orb.rotation.y += 2.2 * dt;
+                }
+
+                const dist = Math.hypot(camera.position.x - item.x, camera.position.z - item.z);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    activeNearbyItem = item;
+                }
+            });
+
+            updateInteractPromptUI(activeNearbyItem);
+            updateCompassDirection(lookDir);
+
+            // 4. Chapter-Specific Monster AI & Sanity
+            updateGhostAIAndSanity(dt, lookDir, inputMag > 0.15, canSprint);
+
+            // 5. Refresh HUD
+            updateInGameHUD();
+        }
+
+        function updateGhostAIAndSanity(dt, playerLookDir, isMoving, isSprinting) {
+            if (!ghostEntity) return;
+            const cfg = CHAPTER_CONFIGS[gameState.chapterId];
+
+            const dx = camera.position.x - ghostEntity.position.x;
+            const dz = camera.position.z - ghostEntity.position.z;
+            const distToPlayer = Math.hypot(dx, dz);
+
+            // Chapter 3 Bishop Periodic Shadow-Step Teleport when far away
+            if (cfg.id === 3 && ghostState.stunTimer <= 0) {
+                ghostState.teleportCooldown -= dt;
+                if (ghostState.teleportCooldown <= 0 && distToPlayer > 14) {
+                    ghostState.teleportCooldown = 15;
+                    const wp = ghostState.waypoints[Math.floor(Math.random() * ghostState.waypoints.length)];
+                    ghostEntity.position.set(wp.x, 0, wp.z);
+                    soundEngine.playGhostScreech();
+                    openToast('深淵主教在紅霧中瞬移轉移了位置！');
+                }
+            }
+
+            if (ghostState.stunTimer > 0) {
+                ghostState.stunTimer -= dt;
+                ghostEntity.rotation.y += 12 * dt;
+            } else {
+                // Chapter-specific Detection Mechanics
+                let detectRange = 11.0;
+                if (cfg.id === 2) {
+                    // Blind Executioner: Sound-based detection!
+                    if (gameState.isStealth && !isSprinting) {
+                        detectRange = 2.6; // Nearly invisible when crouching/holding breath
+                    } else if (isSprinting) {
+                        detectRange = 16.5; // Hears sprinting from far away
+                    } else if (isMoving) {
+                        detectRange = 9.5;
+                    } else {
+                        detectRange = 3.2;
+                    }
+                } else {
+                    // Chapter 1 Nun & Chapter 3 Bishop: Sight + Light detection
+                    detectRange = gameState.flashlightOn ? (gameState.isStealth ? 9.5 : 13.5) : (gameState.isStealth ? 4.8 : 7.5);
+                }
+
+                if (distToPlayer < detectRange) {
+                    if (ghostState.aiMode !== 'CHASE') {
+                        ghostState.aiMode = 'CHASE';
+                        soundEngine.playGhostScreech();
+                        triggerHaptic([60, 80, 60]);
+                    }
+                } else if (distToPlayer > detectRange + 4.5 && ghostState.aiMode === 'CHASE') {
+                    ghostState.aiMode = 'PATROL';
+                }
+
+                if (ghostState.aiMode === 'CHASE') {
+                    const dirX = dx / (distToPlayer || 1);
+                    const dirZ = dz / (distToPlayer || 1);
+                    ghostEntity.position.x += dirX * cfg.ghostChaseSpeed * dt;
+                    ghostEntity.position.z += dirZ * cfg.ghostChaseSpeed * dt;
+                    ghostEntity.lookAt(camera.position.x, 0, camera.position.z);
+                } else {
+                    const wp = ghostState.waypoints[ghostState.currentWaypoint];
+                    const wdx = wp.x - ghostEntity.position.x;
+                    const wdz = wp.z - ghostEntity.position.z;
+                    const wDist = Math.hypot(wdx, wdz);
+                    if (wDist < 0.6) {
+                        ghostState.currentWaypoint = (ghostState.currentWaypoint + 1) % ghostState.waypoints.length;
+                    } else {
+                        ghostEntity.position.x += (wdx / wDist) * cfg.ghostBaseSpeed * dt;
+                        ghostEntity.position.z += (wdz / wDist) * cfg.ghostBaseSpeed * dt;
+                        ghostEntity.lookAt(wp.x, 0, wp.z);
+                    }
+                }
+            }
+
+            ghostEntity.position.y = Math.sin(gameState.elapsedSeconds * 3.5) * 0.12;
+
+            // Sanity Drain & Chromatic Jitter
+            let sanityDrainRate = 0;
+            if (!gameState.flashlightOn) sanityDrainRate += 1.25;
+            if (distToPlayer < 12) {
+                sanityDrainRate += (12 - distToPlayer) * 1.3;
+                const beatInterval = THREE.MathUtils.clamp(distToPlayer / 13, 0.25, 0.85);
+                gameState.heartbeatTimer += dt;
+                if (gameState.heartbeatTimer >= beatInterval) {
+                    gameState.heartbeatTimer = 0;
+                    soundEngine.playHeartbeat(1.35 - distToPlayer / 14);
+                    triggerHaptic(18);
+                }
+            } else if (gameState.flashlightOn) {
+                gameState.sanity = Math.min(100, gameState.sanity + 0.75 * dt);
+            }
+
+            gameState.sanity = Math.max(0, gameState.sanity - sanityDrainRate * dt);
+
+            const warningPill = document.getElementById('ghost-warning-pill');
+            const statusLabel = document.getElementById('ghost-status-label');
+            const bloodOverlay = document.getElementById('sanity-blood-vignette');
+            const canvasEl = document.getElementById('webgl-container');
+
+            if (distToPlayer < 13) {
+                warningPill.style.opacity = '1';
+                statusLabel.textContent = ghostState.stunTimer > 0
+                    ? `${cfg.ghostName}已被強光致盲！`
+                    : (ghostState.aiMode === 'CHASE' ? `警告：${cfg.ghostName}正在追擊你！` : `${cfg.ghostName}正在附近徘徊...`);
+            } else {
+                warningPill.style.opacity = '0';
+            }
+
+            const dangerFactor = Math.max(1 - gameState.sanity / 100, distToPlayer < 10 ? (10 - distToPlayer) / 10 : 0);
+            bloodOverlay.style.opacity = Math.min(0.92, dangerFactor * 0.95).toFixed(2);
+
+            if (gameState.sanity < 35) {
+                canvasEl.classList.add('low-sanity-shake');
+            } else {
+                canvasEl.classList.remove('low-sanity-shake');
+            }
+
+            if (distToPlayer < 1.15 || gameState.sanity <= 0) {
+                triggerEnding(false);
+            }
+        }
+
+        function updateInteractPromptUI(item) {
+            const btn = document.getElementById('btn-interact');
+            const label = document.getElementById('interact-btn-label');
+            const icon = document.getElementById('interact-btn-icon');
+            const hint = document.getElementById('interact-hint-badge');
+
+            if (item) {
+                btn.classList.add('interact-ready');
+                hint.style.opacity = '1';
+                if (item.type === 'QUEST_ITEM') {
+                    label.textContent = '拾取道具';
+                    icon.className = 'fa-solid fa-key text-lg text-[#fff3d1]';
+                    hint.textContent = `發現：${item.title}`;
+                } else if (item.type === 'BATTERY') {
+                    label.textContent = '拾取電池';
+                    icon.className = 'fa-solid fa-battery-full text-lg text-emerald-300';
+                    hint.textContent = `拾取：${item.title}（存入背包）`;
+                } else if (item.type === 'SEDATIVE') {
+                    label.textContent = '拾取藥劑';
+                    icon.className = 'fa-solid fa-syringe text-lg text-sky-300';
+                    hint.textContent = `拾取：${item.title}（存入背包）`;
+                } else if (item.type === 'NOTE') {
+                    label.textContent = '閱讀殘頁';
+                    icon.className = 'fa-solid fa-scroll text-lg text-[#f3d58d]';
+                    hint.textContent = `發現線索：${item.title}`;
+                } else if (item.type === 'PUZZLE') {
+                    label.textContent = '啟動機關';
+                    icon.className = 'fa-solid fa-gears text-lg text-amber-300';
+                    hint.textContent = gameState.itemsCollected >= gameState.itemsRequired
+                        ? `點擊互動啟動「${item.title}」`
+                        : `需要集齊所有任務道具 (${gameState.itemsCollected}/${gameState.itemsRequired})`;
+                } else if (item.type === 'GATE') {
+                    label.textContent = '逃出生天';
+                    icon.className = 'fa-solid fa-door-open text-lg text-[#ff8585]';
+                    hint.textContent = gameState.gateUnlocked
+                        ? `封印已解除！點擊開啟「${item.title}」`
+                        : `大門仍被深淵封印鎖住，請先完成祭壇/機關儀式`;
+                }
+            } else {
+                btn.classList.remove('interact-ready');
+                label.textContent = '互動';
+                icon.className = 'fa-solid fa-hand text-lg text-[#c5a059]';
+                hint.style.opacity = '0';
+            }
+        }
+
+        function triggerPlayerInteract() {
+            if (gameState.mode !== 'PLAYING' || !activeNearbyItem) {
+                soundEngine.playUIChime(300);
+                return;
+            }
+
+            const item = activeNearbyItem;
+            if (item.type === 'QUEST_ITEM') {
+                item.collected = true;
+                item.mesh.visible = false;
+                gameState.itemsCollected++;
+                soundEngine.playKeyPickup();
+                triggerHaptic([30, 50, 30]);
+                updateObjectiveTextUI();
+                openToast(`獲得：${item.title} (${gameState.itemsCollected}/${gameState.itemsRequired})`);
+            } else if (item.type === 'BATTERY') {
+                item.collected = true;
+                item.mesh.visible = false;
+                gameState.invBatteries++;
+                document.getElementById('inv-battery-count').textContent = gameState.invBatteries;
+                soundEngine.playKeyPickup();
+                triggerHaptic(25);
+                openToast('已將「備用電池」放入右上角快捷背包！');
+            } else if (item.type === 'SEDATIVE') {
+                item.collected = true;
+                item.mesh.visible = false;
+                gameState.invSedatives++;
+                document.getElementById('inv-sedative-count').textContent = gameState.invSedatives;
+                soundEngine.playKeyPickup();
+                triggerHaptic(25);
+                openToast('已將「鎮靜安神劑」放入右上角快捷背包！');
+            } else if (item.type === 'NOTE') {
+                item.collected = true;
+                item.mesh.visible = false;
+                gameState.notesCollected++;
+                playerProfile.collectedNotesTotal++;
+                persistPlayerSave();
+                soundEngine.playUIChime(640);
+                triggerHaptic(20);
+                document.getElementById('note-title').textContent = item.title;
+                document.getElementById('note-body').textContent = item.body;
+                gameState.mode = 'PAUSED';
+                openModal('note-reader-modal');
+            } else if (item.type === 'PUZZLE') {
+                if (gameState.itemsCollected < gameState.itemsRequired) {
+                    soundEngine.playUIChime(210, true);
+                    openToast(`道具不足！請先集齊 ${gameState.itemsRequired} 件核心任務物品`);
+                    return;
+                }
+                item.collected = true;
+                gameState.puzzlesSolved++;
+                if (item.orb) {
+                    item.orb.material.color.setHex(0x10b981);
+                    item.orb.material.emissive.setHex(0x059669);
+                }
+                if (item.light) item.light.color.setHex(0x34d399);
+                soundEngine.playGearClank();
+                triggerHaptic([40, 60, 40]);
+
+                if (gameState.puzzlesSolved >= gameState.puzzlesRequired) {
+                    gameState.gateUnlocked = true;
+                    interactables.forEach(it => {
+                        if (it.type === 'GATE' && it.gateLight) {
+                            it.gateLight.color.setHex(0x34d399);
+                        }
+                    });
+                    openToast('封印已徹底解除！北端逃生大門已開啟！');
+                } else {
+                    openToast(`已啟動「${item.title}」(${gameState.puzzlesSolved}/${gameState.puzzlesRequired})`);
+                }
+                updateObjectiveTextUI();
+            } else if (item.type === 'GATE') {
+                if (gameState.gateUnlocked) {
+                    soundEngine.playNightmareSlam();
+                    triggerHaptic([50, 80, 100]);
+                    triggerEnding(true);
+                } else {
+                    soundEngine.playUIChime(210, true);
+                    triggerHaptic([30, 40, 30]);
+                    openToast('大門被深淵結界封鎖，請先完成所有聖像/祭壇機關！');
+                }
+            }
+        }
+
+        function useInventoryItem(type) {
+            if (gameState.mode !== 'PLAYING') return;
+            if (type === 'BATTERY') {
+                if (gameState.invBatteries <= 0) {
+                    openToast('背包中沒有備用電池！');
+                    return;
+                }
+                gameState.invBatteries--;
+                gameState.battery = Math.min(100, gameState.battery + 60);
+                gameState.flashlightOn = true;
+                document.getElementById('inv-battery-count').textContent = gameState.invBatteries;
+                document.getElementById('btn-flashlight').classList.add('btn-active');
+                soundEngine.playKeyPickup();
+                triggerHaptic(25);
+                openToast('已更換備用電池，手電筒電量恢復 +60%！');
+            } else if (type === 'SEDATIVE') {
+                if (gameState.invSedatives <= 0) {
+                    openToast('背包中沒有鎮靜安神劑！');
+                    return;
+                }
+                gameState.invSedatives--;
+                gameState.sanity = Math.min(100, gameState.sanity + 45);
+                document.getElementById('inv-sedative-count').textContent = gameState.invSedatives;
+                soundEngine.playUIChime(720);
+                triggerHaptic(25);
+                openToast('已注射鎮靜安神劑，精神理智恢復 +45%！');
+            }
+        }
+
+        function toggleStealthMode() {
+            if (gameState.mode !== 'PLAYING') return;
+            gameState.isStealth = !gameState.isStealth;
+            const btn = document.getElementById('btn-stealth');
+            const label = document.getElementById('stealth-label');
+            soundEngine.playUIChime(gameState.isStealth ? 340 : 480);
+            triggerHaptic(15);
+
+            if (gameState.isStealth) {
+                btn.classList.add('btn-active');
+                label.textContent = '屏息中';
+                openToast('已進入屏息潛行狀態（腳步無聲，大幅降低被察覺機率）');
+            } else {
+                btn.classList.remove('btn-active');
+                label.textContent = '屏息';
+            }
+        }
+
+        function triggerFocusFlash() {
+            if (gameState.mode !== 'PLAYING') return;
+            if (gameState.focusFlashCooldown > 0) {
+                openToast(`強光聚焦冷卻中（剩餘 ${Math.ceil(gameState.focusFlashCooldown)} 秒）`);
+                return;
+            }
+            if (gameState.battery < 20) {
+                openToast('手電筒電量不足 20%，無法釋放強光聚焦！');
+                return;
+            }
+
+            gameState.battery = Math.max(0, gameState.battery - 20);
+            gameState.flashlightOn = true;
+            gameState.focusFlashCooldown = 12;
+            soundEngine.playFocusFlashBlast();
+            triggerHaptic([50, 40, 80]);
+
+            // Intense Spotlight Flare
+            if (playerFlashlight) playerFlashlight.intensity = 16.0;
+
+            // Check if Ghost is within 12 units in front of player
+            if (ghostEntity) {
+                const dx = ghostEntity.position.x - camera.position.x;
+                const dz = ghostEntity.position.z - camera.position.z;
+                const dist = Math.hypot(dx, dz);
+                if (dist < 12.5) {
+                    ghostState.aiMode = 'STUNNED';
+                    ghostState.stunTimer = 3.8;
+                    soundEngine.playGhostScreech();
+                    openToast('強光聚焦命中！怨靈陷入 3.8 秒致盲硬直！');
+                    return;
+                }
+            }
+            openToast('釋放強光聚焦！（消耗 20% 電量）');
+        }
+
+        function buildGothicHallway() {
+            // Procedural Marble / Stone Checker Floor
+            const floorGeo = new THREE.PlaneGeometry(14, 28, 24, 24);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x151418,
+                roughness: 0.28,
+                metalness: 0.35
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Crimson Velvet Carpet Runner down the center
+            const carpetGeo = new THREE.PlaneGeometry(2.1, 24);
+            const carpetMat = new THREE.MeshStandardMaterial({
+                color: 0x3b070b,
+                roughness: 0.85,
+                metalness: 0.05
+            });
+            const carpet = new THREE.Mesh(carpetGeo, carpetMat);
+            carpet.rotation.x = -Math.PI / 2;
+            carpet.position.y = 0.012;
+            carpet.receiveShadow = true;
+            scene.add(carpet);
+
+            // Gold Trim Borders on Carpet
+            const trimGeo = new THREE.PlaneGeometry(0.08, 24);
+            const trimMat = new THREE.MeshStandardMaterial({
+                color: 0xc5a059,
+                roughness: 0.35,
+                metalness: 0.85
+            });
+            [-1.02, 1.02].forEach(xPos => {
+                const trim = new THREE.Mesh(trimGeo, trimMat);
+                trim.rotation.x = -Math.PI / 2;
+                trim.position.set(xPos, 0.015, 0);
+                scene.add(trim);
+            });
+
+            // Gothic Stone Pillars & Ribbed Arches along the corridor
+            const pillarMat = new THREE.MeshStandardMaterial({
+                color: 0x1c1b20,
+                roughness: 0.72,
+                metalness: 0.15
+            });
+
+            for (let z = 3; z >= -15; z -= 4.5) {
+                [-3.4, 3.4].forEach(x => {
+                    // Main Column
+                    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 7.5, 12), pillarMat);
+                    col.position.set(x, 3.75, z);
+                    col.castShadow = true;
+                    col.receiveShadow = true;
+                    scene.add(col);
+
+                    // Pedestal Base
+                    const base = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.65, 1.05), pillarMat);
+                    base.position.set(x, 0.325, z);
+                    base.castShadow = true;
+                    base.receiveShadow = true;
+                    scene.add(base);
+                });
+
+                // Overhead Gothic Arch Beam
+                const arch = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.24, 8, 24, Math.PI), pillarMat);
+                arch.position.set(0, 5.2, z);
+                arch.castShadow = true;
+                scene.add(arch);
+            }
+
+            // Back Cathedral Stained-Glass Rose Window Silhouette
+            const roseFrame = new THREE.Mesh(
+                new THREE.TorusGeometry(2.1, 0.14, 10, 32),
+                new THREE.MeshStandardMaterial({ color: 0x221d18, metalness: 0.7, roughness: 0.4 })
+            );
+            roseFrame.position.set(0, 4.4, -13.5);
+            scene.add(roseFrame);
+
+            const roseGlow = new THREE.Mesh(
+                new THREE.CircleGeometry(2.05, 32),
+                new THREE.MeshBasicMaterial({ color: 0x162238, transparent: true, opacity: 0.55 })
+            );
+            roseGlow.position.set(0, 4.4, -13.55);
+            scene.add(roseGlow);
+        }
+
+        function buildAltarAndCandles() {
+            const altarGroup = new THREE.Group();
+            altarGroup.position.set(0, 0, -2.6);
+
+            // Obsidian Stone Altar Table
+            const stoneMat = new THREE.MeshStandardMaterial({
+                color: 0x141317,
+                roughness: 0.55,
+                metalness: 0.25
+            });
+            const table = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.15, 1.2), stoneMat);
+            table.position.y = 0.575;
+            table.castShadow = true;
+            table.receiveShadow = true;
+            altarGroup.add(table);
+
+            // Gold Ornate Altar Cloth Trim
+            const goldMat = new THREE.MeshStandardMaterial({
+                color: 0xd4af37,
+                roughness: 0.28,
+                metalness: 0.9
+            });
+            const goldBand = new THREE.Mesh(new THREE.BoxGeometry(2.66, 0.08, 1.26), goldMat);
+            goldBand.position.y = 1.12;
+            altarGroup.add(goldBand);
+
+            // Central Cursed Reliquary / Inverted-Shadow Gothic Cross
+            altarCross = new THREE.Group();
+            altarCross.position.set(0, 1.95, 0);
+
+            const vBar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.35, 0.14), goldMat);
+            const hBar = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.14, 0.14), goldMat);
+            hBar.position.y = 0.24;
+
+            // Crimson Ruby Core at the center of the Cross
+            const rubyMat = new THREE.MeshStandardMaterial({
+                color: 0xff0a0a,
+                emissive: 0x990000,
+                emissiveIntensity: 1.8,
+                roughness: 0.15
+            });
+            const rubyCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.16, 0), rubyMat);
+            rubyCore.position.set(0, 0.24, 0.08);
+
+            altarCross.add(vBar, hBar, rubyCore);
+            altarGroup.add(altarCross);
+
+            // Left & Right Golden Candelabras with Flickering Flames
+            const createCandle = (xOffset) => {
+                const cGroup = new THREE.Group();
+                cGroup.position.set(xOffset, 1.15, 0.15);
+
+                const holder = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.14, 0.35, 12), goldMat);
+                holder.position.y = 0.175;
+                cGroup.add(holder);
+
+                const wax = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.055, 0.06, 0.48, 12),
+                    new THREE.MeshStandardMaterial({ color: 0xe6dcc8, roughness: 0.4 })
+                );
+                wax.position.y = 0.58;
+                cGroup.add(wax);
+
+                const flame = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.045, 0.14, 10),
+                    new THREE.MeshBasicMaterial({ color: 0xffb74d })
+                );
+                flame.position.y = 0.89;
+                cGroup.add(flame);
+
+                altarGroup.add(cGroup);
+                return flame;
+            };
+
+            candleFlame1 = createCandle(-0.88);
+            candleFlame2 = createCandle(0.88);
+
+            // Swinging Giant Censer / Pendulum hanging from ceiling
+            pendulumMesh = new THREE.Group();
+            pendulumMesh.position.set(0, 6.5, -2.6);
+            const chain = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.015, 0.015, 3.1, 6),
+                goldMat
+            );
+            chain.position.y = -1.55;
+            const censer = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 1), goldMat);
+            censer.position.y = -3.15;
+            pendulumMesh.add(chain, censer);
+            scene.add(pendulumMesh);
+
+            // Eerie Shadowy Apparition Silhouette in the far corridor
+            const ghostGeo = new THREE.ConeGeometry(0.65, 2.4, 16, 1, true);
+            const ghostMat = new THREE.MeshBasicMaterial({
+                color: 0x050508,
+                transparent: true,
+                opacity: 0.0,
+                side: THREE.DoubleSide
+            });
+            shadowGhost = new THREE.Mesh(ghostGeo, ghostMat);
+            shadowGhost.position.set(0, 1.2, -7.8);
+            scene.add(shadowGhost);
+
+            scene.add(altarGroup);
+        }
+
+        function buildAtmosphericParticles() {
+            // Floating Dust Motes in Candlelight
+            const count = 420;
+            const positions = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 10;
+                positions[i * 3 + 1] = Math.random() * 6;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 18;
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const mat = new THREE.PointsMaterial({
+                color: 0xf3d58d,
+                size: 0.045,
+                transparent: true,
+                opacity: 0.55,
+                blending: THREE.AdditiveBlending
+            });
+            dustParticles = new THREE.Points(geo, mat);
+            scene.add(dustParticles);
+
+            // Rising Crimson Embers near Altar
+            const emberCount = 85;
+            const emberPos = new Float32Array(emberCount * 3);
+            for (let i = 0; i < emberCount; i++) {
+                emberPos[i * 3] = (Math.random() - 0.5) * 3.5;
+                emberPos[i * 3 + 1] = Math.random() * 3.5;
+                emberPos[i * 3 + 2] = -2.6 + (Math.random() - 0.5) * 2.5;
+            }
+            const emberGeo = new THREE.BufferGeometry();
+            emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
+            const emberMat = new THREE.PointsMaterial({
+                color: 0xff4518,
+                size: 0.055,
+                transparent: true,
+                opacity: 0.85,
+                blending: THREE.AdditiveBlending
+            });
+            floatingEmbers = new THREE.Points(emberGeo, emberMat);
+            scene.add(floatingEmbers);
+        }
+
+        function setupLighting() {
+            // Subtle cold ambient fill
+            const ambient = new THREE.AmbientLight(0x161824, 0.65);
+            scene.add(ambient);
+
+            // Warm Flickering Candlelight Left & Right
+            candleLight1 = new THREE.PointLight(0xff8c2b, 2.6, 11, 1.8);
+            candleLight1.position.set(-0.88, 2.15, -2.35);
+            candleLight1.castShadow = true;
+            scene.add(candleLight1);
+
+            candleLight2 = new THREE.PointLight(0xff7722, 2.6, 11, 1.8);
+            candleLight2.position.set(0.88, 2.15, -2.35);
+            candleLight2.castShadow = true;
+            scene.add(candleLight2);
+
+            // Cold Moonlight from Back Rose Window
+            moonLight = new THREE.SpotLight(0x3a5a8c, 3.2, 26, Math.PI / 4, 0.6, 1);
+            moonLight.position.set(0, 5.5, -12.5);
+            moonLight.target.position.set(0, 1.0, -2.0);
+            scene.add(moonLight);
+            scene.add(moonLight.target);
+
+            // Lightning Flash Light (Triggered during thunder)
+            lightningLight = new THREE.PointLight(0x9bbcff, 0, 35);
+            lightningLight.position.set(0, 5.2, -11);
+            scene.add(lightningLight);
+        }
+
+        function triggerLightningFlash() {
+            if (!lightningLight || gameState.mode !== 'MENU') return;
+            lightningLight.intensity = 9.5;
+            if (shadowGhost) shadowGhost.material.opacity = 0.82;
+
+            setTimeout(() => { lightningLight.intensity = 1.5; }, 80);
+            setTimeout(() => { lightningLight.intensity = 7.0; }, 160);
+            setTimeout(() => {
+                lightningLight.intensity = 0;
+                if (shadowGhost) shadowGhost.material.opacity = 0.0;
+            }, 340);
+        }
+
+        function checkCircleWallCollision(nextX, nextZ, radius = 0.65) {
+            for (let i = 0; i < wallColliders.length; i++) {
+                const w = wallColliders[i];
+                const closestX = THREE.MathUtils.clamp(nextX, w.minX, w.maxX);
+                const closestZ = THREE.MathUtils.clamp(nextZ, w.minZ, w.maxZ);
+                const dx = nextX - closestX;
+                const dz = nextZ - closestZ;
+                if ((dx * dx + dz * dz) < (radius * radius)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function closeNoteModal() {
+            closeModal('note-reader-modal');
+            gameState.mode = 'PLAYING';
+        }
+
+        function toggleFlashlight() {
+            if (gameState.mode !== 'PLAYING') return;
+            if (gameState.battery <= 0) {
+                openToast('手電筒已無電量！');
+                return;
+            }
+            gameState.flashlightOn = !gameState.flashlightOn;
+            soundEngine.playFlashlightClick();
+            triggerHaptic(15);
+
+            const btn = document.getElementById('btn-flashlight');
+            if (gameState.flashlightOn) {
+                btn.classList.add('btn-active');
+            } else {
+                btn.classList.remove('btn-active');
+            }
+        }
+
+        function updateInGameHUD() {
+            const sPct = Math.round(gameState.sanity);
+            const stPct = Math.round(gameState.stamina);
+            const bPct = Math.round(gameState.battery);
+
+            document.getElementById('hud-sanity-text').textContent = `${sPct}%`;
+            document.getElementById('hud-sanity-bar').style.width = `${sPct}%`;
+
+            document.getElementById('hud-stamina-text').textContent = `${stPct}%`;
+            document.getElementById('hud-stamina-bar').style.width = `${stPct}%`;
+
+            document.getElementById('hud-battery-text').textContent = `${bPct}%`;
+            const batBar = document.getElementById('hud-battery-bar');
+            batBar.style.width = `${bPct}%`;
+            batBar.style.backgroundColor = bPct < 20 ? '#ff3b3b' : '#f3d58d';
+        }
+
+        function triggerEnding(isVictory) {
+            gameState.mode = 'ENDING';
+            document.getElementById('sanity-blood-vignette').style.opacity = '0';
+            document.getElementById('webgl-container').classList.remove('low-sanity-shake');
+
+            const mins = String(Math.floor(gameState.elapsedSeconds / 60)).padStart(2, '0');
+            const secs = String(Math.floor(gameState.elapsedSeconds % 60)).padStart(2, '0');
+            document.getElementById('stat-time').textContent = `${mins}:${secs}`;
+            document.getElementById('stat-sanity').textContent = `${Math.round(gameState.sanity)}%`;
+            document.getElementById('stat-notes').textContent = `${gameState.notesCollected}`;
+
+            const cfg = CHAPTER_CONFIGS[gameState.chapterId];
+            const titleEl = document.getElementById('ending-title');
+            const subEl = document.getElementById('ending-sub');
+            const descEl = document.getElementById('ending-desc');
+            const iconEl = document.getElementById('ending-icon');
+            const shardsEl = document.getElementById('stat-shards');
+            const nextBtn = document.getElementById('btn-next-chapter');
+
+            if (isVictory) {
+                soundEngine.playKeyPickup();
+                const earned = cfg.rewardShards;
+                playerProfile.shards += earned;
+                playerProfile.sanity = Math.max(50, Math.round(gameState.sanity));
+                if (!playerProfile.clearedChapters.includes(gameState.chapterId)) {
+                    playerProfile.clearedChapters.push(gameState.chapterId);
+                }
+                if (gameState.chapterId < 3 && playerProfile.unlockedChapter <= gameState.chapterId) {
+                    playerProfile.unlockedChapter = gameState.chapterId + 1;
+                }
+                persistPlayerSave();
+
+                subEl.textContent = `${cfg.code} · CHAPTER CLEARED`;
+                titleEl.textContent = gameState.chapterId === 3 ? '永夜終結・破曉' : '封印解除・逃出生天';
+                descEl.textContent = gameState.chapterId === 3
+                    ? '淨化聖火吞沒了深淵主教，你成功打破了淵默之邸的百年詛咒！'
+                    : `你成功逃離了「${cfg.title}」，下一重深淵夢魘已隨之解鎖。`;
+                iconEl.className = 'fa-solid fa-crown text-2xl text-[#f3d58d]';
+                shardsEl.textContent = `+${earned}`;
+
+                if (gameState.chapterId < 3) {
+                    nextBtn.classList.remove('hidden');
+                } else {
+                    nextBtn.classList.add('hidden');
+                }
+            } else {
+                soundEngine.playGhostScreech();
+                subEl.textContent = 'CONSUMED BY NIGHTMARE';
+                titleEl.textContent = '夢魘吞噬';
+                descEl.textContent = gameState.sanity <= 0
+                    ? '無盡的黑暗與耳鳴低語徹底擊潰了你的理智，你永遠留在了迴廊之中……'
+                    : `${cfg.ghostName}的冰冷利爪扼住了你的咽喉，燭火隨之熄滅……`;
+                iconEl.className = 'fa-solid fa-skull text-2xl text-[#ff3b3b]';
+                shardsEl.textContent = '+50';
+                playerProfile.shards += 50;
+                persistPlayerSave();
+                nextBtn.classList.add('hidden');
+            }
+
+            openModal('ending-modal');
+        }
+
+        function proceedToNextChapter() {
+            closeModal('ending-modal');
+            const nextId = Math.min(3, gameState.chapterId + 1);
+            const cfg = CHAPTER_CONFIGS[nextId];
+            launchCinematicTransition(cfg.title, `${cfg.code} · ENTERING THE NEXT NIGHTMARE`, nextId);
+        }
+
+        function setupCameraInteraction(domElement) {
+            const onPointerDown = (e) => {
+                // Ignore if touching virtual joystick
+                if (e.target.closest('#joystick-zone')) return;
+                isDragging = true;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                prevPointerX = clientX;
+                prevPointerY = clientY;
+            };
+
+            const onPointerMove = (e) => {
+                if (!isDragging) {
+                    // Gentle desktop mouse parallax ONLY in MENU mode
+                    if (!e.touches && gameState.mode === 'MENU') {
+                        const nx = (e.clientX / window.innerWidth) * 2 - 1;
+                        const ny = (e.clientY / window.innerHeight) * 2 - 1;
+                        targetCamX = nx * 0.65 * touchSensitivity;
+                        targetCamY = 1.65 - ny * 0.28 * touchSensitivity;
+                    }
+                    return;
+                }
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                if (gameState.mode === 'MENU') {
+                    const deltaX = (clientX - prevPointerX) * 0.0045 * touchSensitivity;
+                    const deltaY = (clientY - prevPointerY) * 0.003 * touchSensitivity;
+                    targetCamX = THREE.MathUtils.clamp(targetCamX - deltaX, -1.65, 1.65);
+                    targetCamY = THREE.MathUtils.clamp(targetCamY + deltaY, 1.05, 2.45);
+                } else if (gameState.mode === 'PLAYING') {
+                    // First-person 360-degree look rotation
+                    const lookSpeed = 0.0048 * touchSensitivity;
+                    gameState.yaw -= (clientX - prevPointerX) * lookSpeed;
+                    gameState.pitch = THREE.MathUtils.clamp(
+                        gameState.pitch - (clientY - prevPointerY) * lookSpeed * 0.85,
+                        -Math.PI / 3.2,
+                        Math.PI / 3.2
+                    );
+                }
+
+                prevPointerX = clientX;
+                prevPointerY = clientY;
+            };
+
+            const onPointerUp = () => {
+                isDragging = false;
+            };
+
+            domElement.addEventListener('mousedown', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
+
+            domElement.addEventListener('touchstart', onPointerDown, { passive: true });
+            window.addEventListener('touchmove', onPointerMove, { passive: true });
+            window.addEventListener('touchend', onPointerUp);
+
+            // Tap on canvas triggers candle flare in MENU mode
+            domElement.addEventListener('click', () => {
+                if (!soundEngine.isInitialized || gameState.mode !== 'MENU') return;
+                soundEngine.playUIChime(280, true);
+                if (candleLight1) candleLight1.intensity = 5.2;
+                if (candleLight2) candleLight2.intensity = 5.2;
+            });
+
+            // Mobile Gyroscope DeviceOrientation Parallax (Menu only)
+            window.addEventListener('deviceorientation', (event) => {
+                if (!gyroEnabled || isDragging || event.gamma === null || gameState.mode !== 'MENU') return;
+                const gamma = THREE.MathUtils.clamp(event.gamma, -30, 30) / 30;
+                const beta = THREE.MathUtils.clamp(event.beta - 45, -30, 30) / 30;
+                targetCamX = gamma * 0.85 * touchSensitivity;
+                targetCamY = 1.65 - beta * 0.35 * touchSensitivity;
+            });
+        }
+
+        function setupVirtualJoystickAndInputs() {
+            const zone = document.getElementById('joystick-zone');
+            const knob = document.getElementById('joystick-knob');
+            const maxRadius = 42;
+            let joyTouchId = null;
+            let centerX = 0, centerY = 0;
+
+            const updateJoystick = (clientX, clientY) => {
+                const dx = clientX - centerX;
+                const dy = clientY - centerY;
+                const dist = Math.min(maxRadius, Math.hypot(dx, dy));
+                const angle = Math.atan2(dy, dx);
+
+                const knobX = Math.cos(angle) * dist;
+                const knobY = Math.sin(angle) * dist;
+                knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+
+                gameState.moveRight = knobX / maxRadius;
+                gameState.moveForward = -(knobY / maxRadius);
+            };
+
+            const resetJoystick = () => {
+                joyTouchId = null;
+                knob.style.transform = 'translate(0px, 0px)';
+                gameState.moveRight = 0;
+                gameState.moveForward = 0;
+            };
+
+            zone.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                const touch = e.changedTouches[0];
+                joyTouchId = touch.identifier;
+                const rect = zone.getBoundingClientRect();
+                centerX = rect.left + rect.width / 2;
+                centerY = rect.top + rect.height / 2;
+                updateJoystick(touch.clientX, touch.clientY);
+            }, { passive: true });
+
+            zone.addEventListener('touchmove', (e) => {
+                e.stopPropagation();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joyTouchId) {
+                        updateJoystick(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+                    }
+                }
+            }, { passive: true });
+
+            zone.addEventListener('touchend', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joyTouchId) {
+                        resetJoystick();
+                    }
+                }
+            });
+
+            // Mouse support for testing virtual joystick on desktop
+            let mouseJoyActive = false;
+            zone.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                mouseJoyActive = true;
+                const rect = zone.getBoundingClientRect();
+                centerX = rect.left + rect.width / 2;
+                centerY = rect.top + rect.height / 2;
+                updateJoystick(e.clientX, e.clientY);
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (mouseJoyActive) updateJoystick(e.clientX, e.clientY);
+            });
+            window.addEventListener('mouseup', () => {
+                if (mouseJoyActive) {
+                    mouseJoyActive = false;
+                    resetJoystick();
+                }
+            });
+
+            // Sprint Touch Hold Button
+            const sprintBtn = document.getElementById('btn-sprint');
+            sprintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); gameState.isSprinting = true; sprintBtn.classList.add('btn-active'); });
+            sprintBtn.addEventListener('touchend', () => { gameState.isSprinting = false; sprintBtn.classList.remove('btn-active'); });
+            sprintBtn.addEventListener('mousedown', () => { gameState.isSprinting = true; sprintBtn.classList.add('btn-active'); });
+            window.addEventListener('mouseup', () => { gameState.isSprinting = false; sprintBtn.classList.remove('btn-active'); });
+
+            // Keyboard Shortcuts for Desktop Testing
+            window.addEventListener('keydown', (e) => {
+                keysPressed[e.code] = true;
+                if (gameState.mode === 'PLAYING') {
+                    if (e.code === 'KeyF') toggleFlashlight();
+                    if (e.code === 'KeyQ') triggerFocusFlash();
+                    if (e.code === 'KeyC') toggleStealthMode();
+                    if (e.code === 'KeyE') triggerPlayerInteract();
+                    if (e.code === 'Digit1') useInventoryItem('BATTERY');
+                    if (e.code === 'Digit2') useInventoryItem('SEDATIVE');
+                    if (e.code === 'Escape') pauseGame();
+                }
+            });
+            window.addEventListener('keyup', (e) => {
+                keysPressed[e.code] = false;
+            });
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('webgl-container');
+            if (!container || !renderer || !camera) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // FPS Counter tracking
+        let frameCount = 0;
+        let lastFpsTime = performance.now();
+
+        function animateMainLoop() {
+            requestAnimationFrame(animateMainLoop);
+
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.getElapsedTime();
+
+            if (gameState.mode === 'MENU') {
+                // Smooth Camera Damping in Luxury Title Menu
+                camera.position.x += (targetCamX - camera.position.x) * 0.05;
+                camera.position.y += (targetCamY - camera.position.y) * 0.05;
+                camera.position.y += Math.sin(elapsed * 1.4) * 0.0012;
+                camera.lookAt(0, 1.55, -3.2);
+
+                // Realistic Candlelight Flicker
+                if (candleLight1 && candleLight2) {
+                    const flicker1 = 2.4 + Math.sin(elapsed * 13.0) * 0.25 + (Math.random() - 0.5) * 0.28;
+                    const flicker2 = 2.4 + Math.cos(elapsed * 11.5) * 0.25 + (Math.random() - 0.5) * 0.28;
+                    candleLight1.intensity += (flicker1 - candleLight1.intensity) * 0.25;
+                    candleLight2.intensity += (flicker2 - candleLight2.intensity) * 0.25;
+                }
+
+                if (candleFlame1 && candleFlame2) {
+                    candleFlame1.scale.set(1, 0.9 + Math.sin(elapsed * 18) * 0.15, 1);
+                    candleFlame2.scale.set(1, 0.9 + Math.cos(elapsed * 16) * 0.15, 1);
+                }
+
+                if (pendulumMesh) {
+                    pendulumMesh.rotation.z = Math.sin(elapsed * 1.35) * 0.14;
+                }
+
+                if (dustParticles) {
+                    dustParticles.rotation.y = elapsed * 0.025;
+                }
+                if (floatingEmbers) {
+                    const posAttr = floatingEmbers.geometry.attributes.position;
+                    for (let i = 0; i < posAttr.count; i++) {
+                        let y = posAttr.getY(i) + 0.008;
+                        if (y > 3.8) y = 0.2;
+                        posAttr.setY(i, y);
+                    }
+                    posAttr.needsUpdate = true;
+                }
+            } else if (gameState.mode === 'PLAYING') {
+                updateGameplayLoop(dt);
+            }
+
+            renderer.render(scene, camera);
+
+            // Update FPS HUD every second
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsTime >= 1000) {
+                const fpsEl = document.getElementById('fps-counter');
+                if (fpsEl) fpsEl.textContent = `${Math.min(60, frameCount)} FPS`;
+                frameCount = 0;
+                lastFpsTime = now;
+            }
+        }
+
+        /**
+         * =========================================================================
+         * 3. SECONDARY 3D ARTIFACT INSPECTOR VIEWER (藏品鑑賞室 3D 模型)
+         * =========================================================================
+         */
+        let artScene, artCamera, artRenderer, artMeshGroup;
+        let artInitialized = false;
+        let artRotY = 0.5, artRotX = 0.2;
+        let isArtDragging = false, artPrevX = 0, artPrevY = 0;
+
+        const artifactsData = [
+            {
+                title: "緋紅聖骸匣 · Blood Reliquary",
+                id: "#01 / 03",
+                danger: "詛咒等級：極危",
+                desc: "以黑曜石與鍍金荊棘鍛造的古老聖物匣，內部封印著不斷跳動的暗紅晶核。靠近時耳邊會響起微弱的心跳與低語。"
+            },
+            {
+                title: "逆時懷錶 · Chronos of Ash",
+                id: "#02 / 03",
+                danger: "詛咒等級：高危",
+                desc: "在鐘樓廢墟中拾獲的黃銅懷錶，指針永遠以逆時針高速旋轉，持有者會逐漸遺忘自己的真實姓名。"
+            },
+            {
+                title: "鴉羽面具 · Plague Visage",
+                id: "#03 / 03",
+                danger: "詛咒等級：禁忌",
+                desc: "大宅歷代主治醫師配戴的鍍金鳥喙面具，眼眶內側刻滿了防止靈魂被大宅吞噬的驅魔銘文。"
+            }
+        ];
+
+        function initArtifactViewer() {
+            const container = document.getElementById('artifact-3d-canvas');
+            if (!container || artInitialized) return;
+
+            artScene = new THREE.Scene();
+            artCamera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 20);
+            artCamera.position.set(0, 0, 3.6);
+
+            artRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            artRenderer.setSize(container.clientWidth, container.clientHeight);
+            artRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(artRenderer.domElement);
+
+            const pLight1 = new THREE.PointLight(0xffd27d, 3.2, 10);
+            pLight1.position.set(2, 2.5, 3);
+            const pLight2 = new THREE.PointLight(0xb31212, 2.5, 10);
+            pLight2.position.set(-2.5, -1.5, 2);
+            artScene.add(pLight1, pLight2, new THREE.AmbientLight(0x2a2428, 1.2));
+
+            artMeshGroup = new THREE.Group();
+            artScene.add(artMeshGroup);
+
+            buildArtifactMesh(0);
+
+            // Drag rotation for artifact
+            const startArtDrag = (e) => {
+                isArtDragging = true;
+                artPrevX = e.touches ? e.touches[0].clientX : e.clientX;
+                artPrevY = e.touches ? e.touches[0].clientY : e.clientY;
+            };
+            const moveArtDrag = (e) => {
+                if (!isArtDragging) return;
+                const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                artRotY += (cx - artPrevX) * 0.015;
+                artRotX += (cy - artPrevY) * 0.015;
+                artPrevX = cx;
+                artPrevY = cy;
+            };
+            const endArtDrag = () => { isArtDragging = false; };
+
+            container.addEventListener('mousedown', startArtDrag);
+            window.addEventListener('mousemove', moveArtDrag);
+            window.addEventListener('mouseup', endArtDrag);
+            container.addEventListener('touchstart', startArtDrag, { passive: true });
+            container.addEventListener('touchmove', moveArtDrag, { passive: true });
+            container.addEventListener('touchend', endArtDrag);
+
+            artInitialized = true;
+            animateArtifactLoop();
+        }
+
+        function buildArtifactMesh(index) {
+            if (!artMeshGroup) return;
+            while (artMeshGroup.children.length > 0) {
+                artMeshGroup.remove(artMeshGroup.children[0]);
+            }
+
+            const goldMat = new THREE.MeshStandardMaterial({ color: 0xd9b362, metalness: 0.9, roughness: 0.25 });
+            const darkMat = new THREE.MeshStandardMaterial({ color: 0x18151c, metalness: 0.6, roughness: 0.4 });
+            const crimsonMat = new THREE.MeshStandardMaterial({ color: 0xff1a1a, emissive: 0x8a0303, emissiveIntensity: 1.5, roughness: 0.1 });
+
+            if (index === 0) {
+                // 01. Blood Reliquary (Cursed Octahedron Cage + Pulsing Ruby Heart)
+                const cage = new THREE.Mesh(new THREE.OctahedronGeometry(0.95, 0), new THREE.MeshStandardMaterial({ color: 0xc5a059, wireframe: true }));
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.04, 12, 36), goldMat);
+                const heart = new THREE.Mesh(new THREE.DodecahedronGeometry(0.45, 0), crimsonMat);
+                artMeshGroup.add(cage, ring, heart);
+            } else if (index === 1) {
+                // 02. Reverse Pocket Watch
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 0.24, 32), goldMat);
+                body.rotation.x = Math.PI / 2;
+                const face = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.82, 0.26, 32), darkMat);
+                face.rotation.x = Math.PI / 2;
+                const hand1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.65, 0.3), crimsonMat);
+                hand1.position.y = 0.2;
+                const hand2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.05, 0.3), goldMat);
+                hand2.position.x = 0.15;
+                artMeshGroup.add(body, face, hand1, hand2);
+            } else {
+                // 03. Gothic Plague Raven Mask
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.68, 24, 24), darkMat);
+                const beak = new THREE.Mesh(new THREE.ConeGeometry(0.28, 1.15, 16), goldMat);
+                beak.rotation.x = Math.PI / 2.2;
+                beak.position.set(0, -0.1, 0.85);
+                const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), crimsonMat);
+                eyeL.position.set(-0.26, 0.14, 0.56);
+                const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), crimsonMat);
+                eyeR.position.set(0.26, 0.14, 0.56);
+                artMeshGroup.add(head, beak, eyeL, eyeR);
+            }
+        }
+
+        function animateArtifactLoop() {
+            requestAnimationFrame(animateArtifactLoop);
+            const modal = document.getElementById('artifacts-modal');
+            if (!artInitialized || modal.classList.contains('hidden')) return;
+
+            if (!isArtDragging) {
+                artRotY += 0.008;
+            }
+            artMeshGroup.rotation.y = artRotY;
+            artMeshGroup.rotation.x = artRotX;
+            artRenderer.render(artScene, artCamera);
+        }
+
+        function switchArtifact(idx) {
+            soundEngine.playUIChime(460 + idx * 80);
+            triggerHaptic(15);
+            const data = artifactsData[idx];
+            document.getElementById('artifact-title').textContent = data.title;
+            document.getElementById('artifact-id').textContent = data.id;
+            document.getElementById('artifact-danger-tag').textContent = data.danger;
+            document.getElementById('artifact-desc').textContent = data.desc;
+
+            [0, 1, 2].forEach(i => {
+                const tab = document.getElementById(`art-tab-${i}`);
+                if (i === idx) {
+                    tab.className = "py-2.5 px-2 rounded-xl border border-[#f3d58d] bg-[#29191b] text-xs font-bold text-[#fff3d1] cursor-pointer transition-all";
+                } else {
+                    tab.className = "py-2.5 px-2 rounded-xl border border-stone-700 bg-black/50 text-xs font-bold text-stone-400 hover:text-stone-200 cursor-pointer transition-all";
+                }
+            });
+
+            buildArtifactMesh(idx);
+        }
+
+        /**
+         * =========================================================================
+         * 4. UI INTERACTIONS, MODALS & GAME FLOW CONTROLS
+         * =========================================================================
+         */
+        function triggerHaptic(ms = 20) {
+            if (hapticEnabled && navigator.vibrate) {
+                navigator.vibrate(ms);
+            }
+        }
+
+        // Intro Veil Awakening Handler
+        document.getElementById('intro-veil').addEventListener('click', () => {
+            soundEngine.init();
+            soundEngine.playUIChime(440, true);
+            triggerHaptic(35);
+
+            const veil = document.getElementById('intro-veil');
+            const hud = document.getElementById('main-hud');
+            veil.style.opacity = '0';
+            setTimeout(() => {
+                veil.style.display = 'none';
+                hud.style.opacity = '1';
+            }, 900);
+        });
+
+        // Audio Toggle Button
+        document.getElementById('audio-toggle-btn').addEventListener('click', () => {
+            if (!soundEngine.isInitialized) soundEngine.init();
+            const muted = soundEngine.toggleMute();
+            const icon = document.getElementById('audio-icon');
+            icon.className = muted ? 'fa-solid fa-volume-xmark text-sm text-stone-500' : 'fa-solid fa-volume-high text-sm';
+            openToast(muted ? '已靜音所有環境音效' : '已開啟空間恐怖音效');
+        });
+
+        // Attach subtle hover/tap chime to all menu buttons
+        document.querySelectorAll('.horror-menu-btn').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                soundEngine.playUIChime(580, btn.classList.contains('primary-crimson'));
+            });
+        });
+
+        function openModal(id) {
+            soundEngine.playUIChime(520);
+            triggerHaptic(15);
+            const el = document.getElementById(id);
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
+
+        function closeModal(id) {
+            soundEngine.playUIChime(380);
+            const el = document.getElementById(id);
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+
+        function openArtifactsModal() {
+            openModal('artifacts-modal');
+            setTimeout(() => {
+                initArtifactViewer();
+                if (artRenderer && artCamera) {
+                    const container = document.getElementById('artifact-3d-canvas');
+                    artCamera.aspect = container.clientWidth / container.clientHeight;
+                    artCamera.updateProjectionMatrix();
+                    artRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            }, 60);
+        }
+
+        function startNewGameSequence() {
+            soundEngine.playNightmareSlam();
+            triggerHaptic([40, 80, 60]);
+            const cfg = CHAPTER_CONFIGS[1];
+            launchCinematicTransition(cfg.title, 'PROLOGUE · ENTERING THE SILENT ABYSS', 1);
+        }
+
+        function continueLastSave() {
+            soundEngine.playNightmareSlam();
+            triggerHaptic(35);
+            const chId = playerProfile.unlockedChapter || 1;
+            const cfg = CHAPTER_CONFIGS[chId];
+            launchCinematicTransition(cfg.title, `LOADING PROGRESS · ${cfg.code}`, chId);
+        }
+
+        function selectChapter(chapterId, unlocked) {
+            if (!unlocked) {
+                soundEngine.playUIChime(210, true);
+                triggerHaptic([30, 50, 30]);
+                openToast('此章節尚未解鎖，請先完成前置夢魘');
+                return;
+            }
+            closeModal('chapters-modal');
+            soundEngine.playNightmareSlam();
+            const cfg = CHAPTER_CONFIGS[chapterId];
+            launchCinematicTransition(cfg.title, 'INITIALIZING 3D HORROR ENVIRONMENT...', chapterId);
+        }
+
+        function launchCinematicTransition(title, sub, chapterId = 1) {
+            const curtain = document.getElementById('transition-curtain');
+            document.getElementById('transition-title').textContent = title;
+            document.getElementById('transition-sub').textContent = sub;
+
+            curtain.classList.remove('pointer-events-none');
+            curtain.style.opacity = '1';
+
+            setTimeout(() => {
+                enterPlayableHorrorMode(chapterId);
+                curtain.style.opacity = '0';
+                setTimeout(() => {
+                    curtain.classList.add('pointer-events-none');
+                }, 900);
+            }, 1500);
+        }
+
+        function enterPlayableHorrorMode(chapterId = 1) {
+            const cfg = CHAPTER_CONFIGS[chapterId] || CHAPTER_CONFIGS[1];
+
+            gameState.mode = 'PLAYING';
+            gameState.chapterId = chapterId;
+            gameState.sanity = 100;
+            gameState.stamina = 100;
+            gameState.battery = 100;
+            gameState.flashlightOn = true;
+            gameState.isStealth = false;
+            gameState.focusFlashCooldown = 0;
+            gameState.itemsCollected = 0;
+            gameState.itemsRequired = cfg.itemTotal;
+            gameState.puzzlesSolved = 0;
+            gameState.puzzlesRequired = cfg.puzzleTotal;
+            gameState.gateUnlocked = false;
+            gameState.notesCollected = 0;
+            gameState.invBatteries = 1;
+            gameState.invSedatives = 1;
+            gameState.elapsedSeconds = 0;
+            gameState.moveForward = 0;
+            gameState.moveRight = 0;
+
+            document.getElementById('hud-chapter-badge').textContent = cfg.shortTitle;
+            document.getElementById('inv-battery-count').textContent = '1';
+            document.getElementById('inv-sedative-count').textContent = '1';
+            document.getElementById('btn-flashlight').classList.add('btn-active');
+            document.getElementById('btn-stealth').classList.remove('btn-active');
+            document.getElementById('stealth-label').textContent = '屏息';
+            document.getElementById('focus-flash-label').textContent = '強光';
+            updateObjectiveTextUI();
+
+            document.getElementById('main-hud').classList.add('hidden');
+            const gpHud = document.getElementById('gameplay-hud');
+            gpHud.classList.remove('hidden');
+            gpHud.classList.add('flex');
+
+            buildPlayableManorLevel(chapterId);
+            openToast(`已進入「${cfg.title}」：注意左上角羅盤與理智波形！`);
+        }
+
+        function pauseGame() {
+            if (gameState.mode !== 'PLAYING') return;
+            gameState.mode = 'PAUSED';
+            openModal('pause-modal');
+        }
+
+        function resumeGame() {
+            closeModal('pause-modal');
+            gameState.mode = 'PLAYING';
+        }
+
+        function restartGameplay() {
+            closeModal('pause-modal');
+            closeModal('ending-modal');
+            enterPlayableHorrorMode(gameState.chapterId);
+        }
+
+        function returnToMainMenu() {
+            closeModal('pause-modal');
+            closeModal('ending-modal');
+            document.getElementById('sanity-blood-vignette').style.opacity = '0';
+            document.getElementById('webgl-container').classList.remove('low-sanity-shake');
+
+            const gpHud = document.getElementById('gameplay-hud');
+            gpHud.classList.add('hidden');
+            gpHud.classList.remove('flex');
+
+            const mainHud = document.getElementById('main-hud');
+            mainHud.classList.remove('hidden');
+            mainHud.style.opacity = '1';
+
+            gameState.mode = 'MENU';
+            clearCurrentSceneObjects();
+            scene.background = new THREE.Color(0x040406);
+            scene.fog = new THREE.FogExp2(0x070609, 0.072);
+            camera.position.set(0, 1.65, 6.2);
+            targetCamX = 0;
+            targetCamY = 1.65;
+
+            buildGothicHallway();
+            buildAltarAndCandles();
+            buildAtmosphericParticles();
+            setupLighting();
+            syncMainMenuProfileUI();
+        }
+
+        function toggleInGameAudio() {
+            const muted = soundEngine.toggleMute();
+            document.getElementById('ingame-audio-icon').className = muted
+                ? 'fa-solid fa-volume-xmark text-xs text-stone-500'
+                : 'fa-solid fa-volume-high text-xs';
+            document.getElementById('audio-icon').className = muted
+                ? 'fa-solid fa-volume-xmark text-sm text-stone-500'
+                : 'fa-solid fa-volume-high text-sm';
+            openToast(muted ? '已靜音所有音效' : '已開啟恐怖環境音效');
+        }
+
+        // Settings Controls
+        function setGraphicsQuality(q) {
+            soundEngine.playUIChime(620);
+            triggerHaptic(12);
+            document.querySelectorAll('.gfx-btn').forEach(btn => {
+                if (btn.dataset.q === q) {
+                    btn.className = "gfx-btn py-2 rounded-lg border border-[#f3d58d] bg-[#2a1d14] text-xs font-cinzel text-[#fff3d1] font-bold cursor-pointer";
+                } else {
+                    btn.className = "gfx-btn py-2 rounded-lg border border-stone-700 bg-black/50 text-xs font-cinzel text-stone-400 cursor-pointer";
+                }
+            });
+
+            const labelMap = {
+                'LOW': 'LOW · 30FPS 省電',
+                'MED': 'MED · 45FPS 均衡',
+                'HIGH': 'HIGH · 60FPS 精緻',
+                'ULTRA': 'ULTRA · 60FPS 光追'
+            };
+            document.getElementById('gfx-label').textContent = labelMap[q];
+            document.getElementById('current-quality-badge').textContent = `${q} 60FPS`;
+
+            if (renderer) {
+                const ratioMap = { 'LOW': 0.85, 'MED': 1.1, 'HIGH': 1.5, 'ULTRA': Math.min(window.devicePixelRatio, 2) };
+                renderer.setPixelRatio(ratioMap[q]);
+            }
+        }
+
+        function updateVolume(val) {
+            document.getElementById('vol-value').textContent = `${val}%`;
+            soundEngine.setVolume(val);
+        }
+
+        function updateSensitivity(val) {
+            touchSensitivity = val / 10;
+            document.getElementById('sens-value').textContent = `${touchSensitivity.toFixed(1)}x`;
+        }
+
+        function toggleSwitch(type) {
+            soundEngine.playUIChime(500);
+            if (type === 'haptic') {
+                hapticEnabled = !hapticEnabled;
+                const el = document.getElementById('haptic-status');
+                el.textContent = hapticEnabled ? '開啟' : '關閉';
+                el.className = hapticEnabled ? 'text-xs font-bold text-emerald-400' : 'text-xs font-bold text-stone-500';
+                if (hapticEnabled) triggerHaptic(25);
+            } else if (type === 'gyro') {
+                gyroEnabled = !gyroEnabled;
+                const el = document.getElementById('gyro-status');
+                el.textContent = gyroEnabled ? '開啟' : '關閉';
+                el.className = gyroEnabled ? 'text-xs font-bold text-emerald-400' : 'text-xs font-bold text-stone-500';
+            }
+        }
+
+        // Non-blocking Custom Toast Notification
+        let toastTimer = null;
+        function openToast(msg) {
+            const toast = document.getElementById('custom-toast');
+            document.getElementById('toast-text').textContent = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, 0)';
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -8px)';
+            }, 2600);
+        }
+
+        // Start 3D Engine on Window Load
+        window.onload = function () {
+            loadPlayerSave();
+            initMain3DScene();
+            setupVirtualJoystickAndInputs();
+            animateMainLoop();
+        };
+    </script>
+</body>
+  </html>
